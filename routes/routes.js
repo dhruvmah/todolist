@@ -33,6 +33,7 @@ var checkLogin = function(req, res) {
 								res.send(err);
 							} else {
 								res.redirect("/profile/" + req.session.username);
+								res.send({id: req.session.username});
 							}
 						});
 					} else {

@@ -161,6 +161,9 @@ var load_posts = function(id) {
 window.onload = function() {
 	$('.header').fadeIn(1000);
 	$('#nav').fadeIn(1000);
+
+	$('newsfeed').html('<a href ="/home/' + getProfileId() + ' ">Home </a>');
+	$('')
 	
 	target = getProfileId();
 	load_posts(target);
@@ -264,8 +267,8 @@ window.onload = function() {
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="/newsfeed/">NewsFeed</a></li>
+            <li class="active newsfeed"></li>
+            <li><a href="/profile/" + getProfileId()>NewsFeed</a></li>
             <li><a href="/logout/">Logout</a></li>
             <li><div class="container" style="width:130px">
     			<form action="" method="" onSubmit="return false">
