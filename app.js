@@ -31,6 +31,7 @@ app.use("/", express.static(__dirname + '/'));
    POST is often used when submitting web forms ('method="post"'). */
 
 app.get('/', routes.get_main);
+app.get('/home/:id', routes.get_home);
 app.get('/profile/:id', routes.get_profile);
 app.post('/checklogin', routes.check_login);
 app.get('/signup', routes.sign_up);

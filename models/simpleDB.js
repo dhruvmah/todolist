@@ -194,11 +194,15 @@ var myDB_loadAllPosts = function(id, route_callbck){
 };
 
 var myDB_loadComments = function(id, route_callbck){
+	  console.log(id);
 	  simpledb.select({SelectExpression: "select * from messages where post_tag = \'" + String(id) + "\'", ConsistentRead: true
 		  }, function (err, data) {
 	    if (err) {
 	      route_callbck("Lookup error: "+err, null);
 	    } else {
+	    	console.log("comment data");
+	    	console.log(data);
+
 	      route_callbck(null, data);
 	    }
 	  });
@@ -228,9 +232,23 @@ var myDB_getFriends = function(id, route_callbck){
 					      		route_callbck(null, datas);
 						    }
 					  	});
+				}
+		});
+	}
+
+
+var myDB_getFriends2 = function(id, route_callbck){
+	  simpledb.select({SelectExpression: "select * from friendships where f1 = \'" + String(id) + "\' or f2 = \'" + String(id) + "\'"
+	  	, ConsistentRead: true
+		}, function (err, data) {
+	    	if (err) {
+	      		route_callbck("Lookup error: "+ err, null);
+	    	} else if (data) {
+	    		route_callbck(null, data);
 			}
 		});
 	}
+
 
 
 var myDB_addFriend = function(friendOne, friendTwo, timeStamp, route_callbck){
@@ -339,6 +357,7 @@ var database = {
   deleteFriend: myDB_deleteFriend,
   getFriends: myDB_getFriends,
   loadAllPosts: myDB_loadAllPosts,
+  loadFriendShipPostings: myDB_getFriends2,
   findUsers: myDB_findUsers
 };
                                         

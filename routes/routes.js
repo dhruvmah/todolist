@@ -180,9 +180,9 @@ var postComment = function(req, res) {
 var loadHome = function(req, res){
 	var id = req.params.id;
 	var friend_ids = [];
-	var posts = [];
+	friend_ids.push(req.session.username);
 	console.log('reached load home in routes');
-	
+	var messages = []
 	 async.series([
         //Load user to get userId first
         function(callback) {
@@ -191,6 +191,7 @@ var loadHome = function(req, res){
                 }
                 //Check that a user was found
                 else if (data) {
+                	console.log(data);
                 	for(var i=0; i<data[0].length; i++){
 						console.log(data[0][i].Attributes[0].Value);
 						friend_ids.push(data[0][i].Attributes[0].Value);
@@ -201,31 +202,70 @@ var loadHome = function(req, res){
         },
         //Load posts (won't be called before task 1's "task callback" has been called)
         function(callback) {
-        		console.log("okay this all works");
+	       		console.log("okay this all works");
         		console.log(friend_ids);
-        		loadPostsWithUserIds(friend_ids, function(err, posts){
+        		loadFriendshipPostings(friend_ids, function(err, data){
         			if(err) return callback(err);
-        			posts.push = posts;
-        			callback();
+        			console.log(data);
+        			for(var i=0; i<data.length; i++){
+						 messages.push(data[i]);
+        			}
+        			callback(); 
+        		})
+        },
+        function(callback) {
+	       		console.log("okay this all works");
+        		console.log(friend_ids);
+        		loadPostsWithUserIds(friend_ids, function(err, data){
+        			if(err) return callback(err);
+        			console.log(data);
+        			for(var i=0; i<data.length; i++){
+						 messages.push(data[i]);
+        			}
+        			callback(); 
         		})
         }
+
     ], function(err) { //This function gets called after the two tasks have called their "task callbacks"
         console.log("done with everything, now lets do shit");
+        messages.sort(function(a,b) {
+        	return b.timeStamp-a.timeStamp
+        });
+        console.log(messages);
+        res.send(JSON.stringify(messages));
    	});
 };
 
 function loadPostsWithUserIds(friend_ids, callback) {
-	posts = [];
+    var posts = []
 	async.forEach(friend_ids, function(friend_id, callback) {
             db.loadAllPosts(friend_id, function(err, data){
             	if(data) {
             		console.log("in the .foreach loop:");
-            		if(data.Items !== undefined){
-            			console.log(data.Items);
+            		if(data.Items != undefined){
+						console.log(data.Items.length);
 						for(var i = 0; i<data.Items.length; i++) {
-	                    	console.log(data.Items[i].Attributes[0].Value);
+							    var nextPost = {};
+								for(var j=0; j<data.Items[i].Attributes.length; j++){
+								 	if(data.Items[i].Attributes[j].Name == "content") {
+										var content = data.Items[i].Attributes[j].Value;
+									} else if(data.Items[i].Attributes[j].Name=="comment_tag") {
+										var comment_tag = data.Items[i].Attributes[j].Value;
+									} else if(data.Items[i].Attributes[j].Name=="creator") {
+										var creator = data.Items[i].Attributes[j].Value;
+									} else if(data.Items[i].Attributes[j].Name=="target") {
+										var target = data.Items[i].Attributes[j].Value;
+									} else if(data.Items[i].Attributes[j].Name=="timeStamp") {
+										var timeStamp = data.Items[i].Attributes[j].Value;
+									}
+								}
+								nextPost.content = content;
+								nextPost.comment_tag=comment_tag;
+								nextPost.creator=creator;
+								nextPost.timeStamp = timeStamp;
+								nextPost.target = target;
+								posts.push(nextPost);
 	                    }
-	            		posts.push(data);
 	            	}
             	} 
             	callback();
@@ -235,6 +275,53 @@ function loadPostsWithUserIds(friend_ids, callback) {
             callback(null, posts);
         });
 };
+
+
+
+function loadFriendshipPostings(friend_ids, callback) {
+    var friendships = []
+	async.forEach(friend_ids, function(friend_id, callback) {
+            db.loadFriendShipPostings(friend_id, function(err, data){
+            	if(data) {
+            		console.log("in the friends loop:");
+            		friendShip = {};
+            		if(data.Items != undefined){
+						console.log(data.Items.length);
+						for(var i = 0; i<data.Items.length; i++) {
+								for(var j=0; j<data.Items[i].Attributes.length; j++){
+								 	if(data.Items[i].Attributes[j].Name == "f1") {
+										var f1 = data.Items[i].Attributes[j].Value;
+									} else if(data.Items[i].Attributes[j].Name=="f2") {
+										var f2 = data.Items[i].Attributes[j].Value;
+									} else if(data.Items[i].Attributes[j].Name=="timeStamp") {
+										var timeStamp = data.Items[i].Attributes[j].Value;
+									}
+								}
+								console.log(f1);
+								console.log(f2);
+								if(parseInt(f1) > parseInt(f2)) {
+									friendShip.f1 = f1;
+									friendShip.f2 = f2;
+								} else {
+									friendShip.f2 = f1;
+									friendShip.f1 = f2;
+								}
+								friendShip.timeStamp = timeStamp; 
+								friendships.push(friendShip);
+	                    }
+	            	}
+            	} 
+            	callback();
+            });
+        }, function(err) {
+            if (err) return callback(err);
+            callback(null, friendships);
+        });
+};
+
+
+
+
 
 //fetches wall posts for a profile page
 var loadWall = function(req, res) {
@@ -396,6 +483,10 @@ var search = function(req, res) {
 	res.render('search.ejs', {error:null});
 }
 
+var getHome = function(req, res) {
+	res.render('homepage.ejs', {error:null});
+}
+
 
 var routes = { 
   get_main: getMain,
@@ -413,7 +504,8 @@ var routes = {
   check_friend: checkFriend,
   delete_friend: deleteFriend,
   search_help: searchSuggest,
-  get_search: search
+  get_search: search,
+  get_home: getHome
 };
 
 module.exports = routes;
