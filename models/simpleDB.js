@@ -365,7 +365,6 @@ var database = {
   getFriends: myDB_getFriends,
   loadAllPosts: myDB_loadAllPosts,
   loadFriendShipPostings: myDB_getFriends2,
-  findUsers: myDB_findUsers
   findUsers: myDB_findUsers,
   toggleOnline: myDB_toggle
 };
