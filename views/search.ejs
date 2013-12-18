@@ -7,14 +7,13 @@
       var term = document.getElementById('abc').value;
       $.getJSON('/suggest/'+escape(term), function(elements) {
       	if (elements.elements != undefined) {
-       		var htmlOut = (elements.elements.length)+ " suggestion(s):<p><table border=\"1\">\n";
+       		var htmlOut = "";
         	for (var i=0; i<elements.elements.length; i++) {
         		var id = elements.elements[i].split(',')[0];
         		var fn = elements.elements[i].split(',')[1];
         		var ln = elements.elements[i].split(',')[2];
-          		htmlOut += "<tr><td><a href='/profile/" + id + "'>" +fn + ' ' + ln +"</a></td></tr>\n";
+          		htmlOut += "<a href='/profile/" + id + "'><div class='results'>" +fn + ' ' + ln +"</div></a>\n";
         	}
-        	htmlOut += "</table>\n";
        		$("#xyz").html(htmlOut);
        } else {
        		var htmlOut = "No users found."
@@ -23,12 +22,25 @@
       });
     } // -->
   </script>
+
+  <style type="text/css">
+  .results {
+  	width: 130px;
+  	padding: 4px;
+  	margin-top: 0px;
+  	border: 1px solid black;
+  }
+
+  .results:hover {
+  	background-color: #dddddd;
+  } </style>
   <body>
     <h3>Input a user name</h3>
+    <div class="container" style="width:130px">
     <form action="" method="" onSubmit="return false">
-      <input type="text" name="thetext" size="20" id="abc" onKeyUp="updateSugg()">
-      <input type="submit" value="Search">
+      <input type="text" name="thetext" size="20" id="abc" onKeyUp="updateSugg()"><br>
+      <div id="xyz"></div>
     </form>
-    <div id="xyz"></div>
+</div>
   </body>
 </html>

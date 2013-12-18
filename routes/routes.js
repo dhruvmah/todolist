@@ -28,7 +28,13 @@ var checkLogin = function(req, res) {
 					if (data.logged_in === true) {
 						req.session.logged =true; 
 						req.session.username = user_id.Attributes[0].Value;
-						res.redirect("/profile/76705186394974");
+						db.toggleOnline(req.session.username, 'yes', function(err, data) {
+							if (err) {
+								res.send(err);
+							} else {
+								res.redirect("/profile/" + req.session.username);
+							}
+						});
 					} else {
 						res.render('main.ejs', {error: 1});
 					}
@@ -54,7 +60,7 @@ var createAccount = function(req, res) {
 	var gender = req.body.gender;
 	var interests = req.body.interests;
 	if (email === "" || password1 === "" || password2 === ""
-			|| first_name === "" || last_name === "" || school === "") {
+			|| first_name === "" || last_name === "" || school === "" || interests === "") {
 		res.render("signup.ejs", {error : 1});
 	} else if (password1 != password2) {
 		res.render("signup.ejs", {error : 2});
@@ -66,7 +72,13 @@ var createAccount = function(req, res) {
 				req.session.logged = true;
 				console.log(data);
 				req.session.username = data;
-				res.redirect("/profile/76705186394974");
+				db.toggleOnline(data, 'yes', function(err, data) {
+					if (err) {
+						res.send(err);
+					} else {
+						res.redirect("/profile/" + req.session.username);
+					}
+				});
 			}
 		});
 	}
@@ -186,6 +198,7 @@ var loadHome = function(req, res){
 	 async.series([
         //Load user to get userId first
         function(callback) {
+        	console.log("1");
             db.getFriends(id, function(err, data) {
                 if (err){ return callback(err)
                 }
@@ -389,7 +402,14 @@ var searchSuggest = function(req, res) {
 //after logout button is pressed
 var logout = function(req, res) {
 	req.session.logged = false;
-	res.redirect('/');
+	var id = req.session.username;
+	db.toggleOnline(id, 'no', function(err, data) {
+		if (err) {
+			res.send(err);
+		} else {
+			res.redirect('/');
+		}
+	});
 };
 
 var search = function(req, res) {
