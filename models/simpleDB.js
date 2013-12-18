@@ -2,18 +2,6 @@ var AWS = require('aws-sdk');
 AWS.config.loadFromPath('config.json');
 var simpledb = new AWS.SimpleDB();
 
-// This function gets all the restaurants to display in the table
-var myDB_restaurants = function(route_callbck){
-  simpledb.select({SelectExpression: "select * from restaurants", ConsistentRead: true
-	  }, function (err, data) {
-    if (err) {
-      route_callbck("Lookup error: "+err, null);
-    } else {
-      route_callbck(null, data);
-    }
-  });
-};
-
 // creates a new account in the db
 var myDB_createAccount = function(email, password, first_name, last_name, school, birthday, gender, interests, route_callbck){
 	var error = {};
@@ -337,6 +325,27 @@ var myDB_findUsers = function(term, route_callbck) {
 	})
 }
 
+var myDB_toggle = function(id, bool, route_callbck) {
+	if (bool === 'yes') var tog = 'no';
+	else var tog = 'yes';
+	simpledb.deleteAttributes({DomainName: 'users', ItemName: id, Attributes:[{'Name': 'online', 'Value': tog}]}, function(err, data) {
+		if (err) {
+			console.log("1");
+			route_callbck(err, null);
+		} else {
+			simpledb.putAttributes({DomainName: 'users', ItemName: id, Attributes:[{'Name': 'online', 'Value': bool}]}, function(err2, data2) {
+				if (err2) {
+					console.log("2");
+					route_callbck(err2, null);
+				} else {
+					console.log("3");
+					route_callbck(null, null);
+				}
+			});
+		}
+	});
+}
+
 
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
@@ -344,8 +353,6 @@ var myDB_findUsers = function(term, route_callbck) {
 
 var database = { 
   loginUser: myDB_login,
-  createAccount: myDB_createAccount,
-  findRestaurants: myDB_restaurants,
   getID: get_ID,
   getProfile: myDB_getProfile,
   sendMessage: myDB_sendMessage,
@@ -359,6 +366,8 @@ var database = {
   loadAllPosts: myDB_loadAllPosts,
   loadFriendShipPostings: myDB_getFriends2,
   findUsers: myDB_findUsers
+  findUsers: myDB_findUsers,
+  toggleOnline: myDB_toggle
 };
                                         
 module.exports = database;
