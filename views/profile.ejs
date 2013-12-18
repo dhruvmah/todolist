@@ -70,16 +70,8 @@ var getProfileId = function() {
 var load_posts = function(id) {
 	var get_comments = function (id, callback){ 
 		var commentList = [];
-<<<<<<< HEAD
-		console.log("right before get json");
 		$.getJSON('/loadcomments/' + id, function(comments){
-			console.log('after json');
-				console.log(comments.length)
-=======
-		$.getJSON('http://127.0.0.1:8080/loadcomments/' + id, function(comments){
->>>>>>> parent of ebcd4c2... search suggestions & signup
 			for (var j=comments.length-1; j>-1; j--){
-				console.log(comments.length)
 				console.log(comments[j]);
 				commentList.push(comments[j]);
 				$("#"+id).append('<p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
@@ -89,13 +81,13 @@ var load_posts = function(id) {
 		});
 	}
 	
-	$.getJSON('http://127.0.0.1:8080/loadwall/' + id, function(elements){
+	$.getJSON('/loadwall/' + id, function(elements){
 		var html = "";
 		for(var i=elements.length-1; i>-1; i--) {
 			comment_tag = elements[i].comment_tag;
 			html += "<div class= \' wall-post \' >"
 						+ "<div class = \' tofrom \'>"
-							+ "At " + elements[i].timeStamp + ", <a href=\'http://127.0.0.1:8080/profile/" + 
+							+ "At " + elements[i].timeStamp + ", <a href=\'/profile/" + 
 							elements[i].creator+ "\'>" + elements[i].creator + "</a>" +
 					" wrote: </div>" +
 						'<div id="' + elements[i].comment_tag + '" >' + elements[i].content + "<br />Comments: </div>"
@@ -118,7 +110,7 @@ var load_posts = function(id) {
 				console.log("hey it clicked");
 				var content = $(this).parent().find(".content").val();
 				var tag = $(this).parent().find(".hide").val();
-				$.post("http://127.0.0.1:8080/postcomment", {
+				$.post("/postcomment", {
 					content: content,
 					tag: tag,
 				}, function(data, status) {
@@ -130,7 +122,6 @@ var load_posts = function(id) {
 						} else {
 							console.log(target);
 							document.getElementById("content").value = "";
-							console.log("posted, about to re-load posts");
 							load_posts(target);
 						}
 					}
@@ -148,13 +139,13 @@ window.onload = function() {
 	target = getProfileId();
 	load_posts(target);
 	
-	$.get("http://127.0.0.1:8080/checkfriend/" + target, {}, function(data, status){
+	$.get("/checkfriend/" + target, {}, function(data, status){
 		if(!data){
 			console.log(data);
 			$("#addButton").click(function(e) {
 				e.preventDefault();
 				console.log("button clicked");
-				$.post("http:///127.0.0.1:8080/addfriend/" + target, {}, function(data, status){
+				$.post("/addfriend/" + target, {}, function(data, status){
 					if(data){
 						alert("added friend");
 						$('#addButton').css("display", "none");
@@ -162,7 +153,7 @@ window.onload = function() {
 						$("#delete").click(function(e) {
 							e.preventDefault();
 							console.log("button clicked");
-							$.post("http:///127.0.0.1:8080/delete/" + target, {}, function(data, status){
+							$.post("/delete/" + target, {}, function(data, status){
 								if(data){
 									alert("deleted friend");
 									$('#delete').css("display", "none");
@@ -183,7 +174,7 @@ window.onload = function() {
 			$("#delete").click(function(e) {
 				e.preventDefault();
 				console.log("button clicked");
-				$.post("http:///127.0.0.1:8080/delete/" + target, {}, function(data, status){
+				$.post("/delete/" + target, {}, function(data, status){
 					if(data){
 						alert("deleted friend");
 						$('#delete').css("display", "none");
@@ -204,7 +195,7 @@ window.onload = function() {
 		});
 	
 	$("#submit").click(function() {
-		$.post("http://127.0.0.1:8080/sendmessage", {
+		$.post("/sendmessage", {
 			content: document.getElementById("content").value,
 			target: target,
 			pvt: "0"
@@ -249,10 +240,11 @@ window.onload = function() {
 	<% console.log(profile) %>
 	<div class="header">
 		<h2> <%= profile.firstName + " " + profile.lastName %> </h2>
-		<p> Gender: </p>
+		<p> Gender: <%= profile.gender %></p>
 		<p> Email: <%= profile.email %> </p>
 		<p> Birthday: <%= profile.birthday %> </p>
 		<p> Network: <%= profile.network %> </p>
+		<p> Interests: <%= profile.interests %> </p>
 	</div>
 //
 

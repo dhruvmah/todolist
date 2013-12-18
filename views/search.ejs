@@ -1,0 +1,34 @@
+<html>
+  <head><title>Search</title></head>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript">
+  <!-- 
+    function updateSugg() {
+      var term = document.getElementById('abc').value;
+      $.getJSON('/suggest/'+escape(term), function(elements) {
+      	if (elements.elements != undefined) {
+       		var htmlOut = (elements.elements.length)+ " suggestion(s):<p><table border=\"1\">\n";
+        	for (var i=0; i<elements.elements.length; i++) {
+        		var id = elements.elements[i].split(',')[0];
+        		var fn = elements.elements[i].split(',')[1];
+        		var ln = elements.elements[i].split(',')[2];
+          		htmlOut += "<tr><td><a href='/profile/" + id + "'>" +fn + ' ' + ln +"</a></td></tr>\n";
+        	}
+        	htmlOut += "</table>\n";
+       		$("#xyz").html(htmlOut);
+       } else {
+       		var htmlOut = "No users found."
+       		$("#xyz").html(htmlOut);
+       }
+      });
+    } // -->
+  </script>
+  <body>
+    <h3>Input a user name</h3>
+    <form action="" method="" onSubmit="return false">
+      <input type="text" name="thetext" size="20" id="abc" onKeyUp="updateSugg()">
+      <input type="submit" value="Search">
+    </form>
+    <div id="xyz"></div>
+  </body>
+</html>
