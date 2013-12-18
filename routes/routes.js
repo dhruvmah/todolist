@@ -483,15 +483,14 @@ var getOnline = function(req, res) {
 			var j = 0;
 			var returned = new Array();
 			for (var i = 0; i < data.Items.length; i++) {
-				console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
 				console.log(data.Items[i].Name);
 				var friendTwo = data.Items[i].Name;
 				var friendOne = req.session.username;
-				var isFriends = false;
+				var isFriends = true; //change back to false
 				var tmp = {};
 				tmp.Value = i;
-				console.log("1: " + i);
-				db.checkFriend(friendOne,friendTwo, function(err2, data2){
+				//console.log("1: " + i);
+				/*db.checkFriend(friendOne,friendTwo, function(err2, data2){
 					if(err2) {
 						console.log("1");
 						res.send("error");
@@ -502,7 +501,7 @@ var getOnline = function(req, res) {
 						isFriends = true;
 						console.log("2: " + tmp.Value);
 					}
-				});
+				}); */
 				if (isFriends) {
 					console.log(data.Items[i]);
 					returned[j] = (data.Items[i]);
@@ -518,14 +517,15 @@ var getOnline = function(req, res) {
 	})
 }
 
+// to help with replacing user ids with first and last names
+// didn't finish
 var getName = function(req, res) {
 	var id = req.session.username;
 	db.getProfile(id, function (err, data) {
 		if (err) {
 			res.send(err);
 		} else if (data.Items != undefined) {
-			//do shit
-			console.log("-------+++++++++++++++++++++++------------");
+			//do stuff
 			console.log(data.Items);
 		} else {
 			res.send(null);
@@ -534,8 +534,41 @@ var getName = function(req, res) {
 }
 
 var getProfile2 = function(req, res) {
-	//res.redirect('/profile/' + req.session.username);
 	res.send();
+}
+
+var getSuggest = function(req, res) {
+	var id = req.session.username;
+	db.get_friendrec(req.session.username, function(err, data) {
+		if (err) {
+			res.send(err);
+		} else if (data.Items != undefined) {
+			var j = 0;
+			var returned = new Array();
+			for (var i = 0; i < data.Items.length; i++) {
+				var f = data.Items[i].Attributes[1].Value;
+				returned[i] = (f);
+			}
+			
+			console.log("Returned: ");
+			console.log(returned);
+			res.send({elements: returned});
+		} else {
+			res.send(null);
+		}
+	});
+}
+
+var getVisual = function(req, res) {
+	db.getvis (function (err, data) {
+		if (err) {
+			res.send(err);
+		} else if (data.Items != undefined) {
+			res.send("issues");
+		} else {
+			res.render('friendvisualizer.ejs');
+		}
+	});
 }
 
 
@@ -560,7 +593,9 @@ var routes = {
   get_home2: getHome2,
   get_online: getOnline,
   get_name: getName,
-  get_profile2: getProfile2
+  get_profile2: getProfile2,
+  get_suggestions: getSuggest,
+  visual: getVisual
 };
 
 module.exports = routes;

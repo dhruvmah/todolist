@@ -50,7 +50,9 @@ app.get('/search', routes.get_search);
 app.get('/getonline', routes.get_online);
 app.get('/gethome/', routes.get_home2);
 app.get('/findname/', routes.get_name);
-app.get('/getprofile/', routes.get_profile);
+app.get('/getprofile2/', routes.get_profile2);
+app.get('/getsuggestions/', routes.get_suggestions);
+app.get('/visualize/', routes.visual);
 /* Run the server */
 
 console.log('Authors: Dhruv Maheshwari (dhruvm) & Corey Loman (loman)');

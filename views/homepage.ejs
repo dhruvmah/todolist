@@ -75,10 +75,28 @@
   	background-color: #dddddd;	
 }
 
-.online {
-	margin-left:450px;
-	width: 4
-	00px;
+#test {
+	border: 1px solid black;
+	margin-left:500px;
+	margin-top: 50px;
+	width: 200px;
+	height: 250px;
+}
+
+#sugg {
+	border: 1px solid black;
+	margin-left: 500px;
+	margin-top: 300px;
+	width: 200px;
+	height: 250px;
+}
+
+#visual {
+	border: 1px solid black;
+	margin-left: 500px;
+	margin-top:550px;
+	width: 200px;
+	height:250px;
 }
 </style>
 
@@ -184,6 +202,7 @@ $.get('/gethome', function(e) {
 	res.redirect(e);
 })
 
+// getting redirect loop
 $.get('/getprofile2/', function(e) {
 	res.redirect(e);
 })
@@ -196,13 +215,23 @@ window.onload = function() {
 	load_newsfeed(target);
 
 	$.get("/getonline", function(e) {
-		console.log("Meow meow");
-		console.log("Meow size: " + e.length);
+		var html = "Who's Online?";
 		for (var i = 0; i < e.length; i++) {
-			console.log(e[i]);
+			html += "<div><a href = '/profiles/" + e[i].Name + "'> " + e[i].Attributes[0].Value + " " + e[i].Attributes[1].Value + "</a></div>";
 		}
 
-		$('#test').html("Hello world");
+		$('#test').append(html);
+
+	})
+
+	$.get("/getsuggestions", function(e) {
+		var html = "People You May Know";
+		for (var i = 0; i < e.elements.length; i++) {
+			html += "<div><a href = '/profiles/" + e.elements[i].Name + "'>" + e.elements[i].Name + "</a></div>"
+			console.log(html);
+		}
+
+		$('#sugg').append(html);
 
 	})
 		
@@ -287,11 +316,14 @@ window.onload = function() {
   	</div>
   </div>
 
-  <div id="onlinefriends">
-  	<div class="online" id="test"></div>
+  <div class="#test" id="test">
   </div>
 
-  <div class="online" id="test">
+  <div class="#sugg" id="sugg"> </div>
+
+  <div class="visual" style="width:200px">
+  		<form action="/visualize" method="get">
+  			<input type="submit" value="Visualize Your Network" class="btn btn-lg btn-inverse btn-block">
   </div>
 
 

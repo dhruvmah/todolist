@@ -322,8 +322,23 @@ var myDB_toggle = function(id, bool, route_callbck) {
 	});
 }
 
+
 var myDB_online = function(id, route_callbck) {
 	simpledb.select({SelectExpression: "select first_name, last_name from users where online='yes'", ConsistentRead: true}, function(err, data) {
+		if (err) {
+			route_callbck(err, null);
+		} else if (data) {
+
+			route_callbck(null, data);
+		} else {
+			route_callbck(null, null);
+		}
+	});
+}
+
+// returning correct thing
+var myDB_friendrec = function (id, route_callbck) {
+	simpledb.select({SelectExpression: "select user, friend from recommendations where user='" + id + "' limit 5", ConsistentRead: true}, function (err, data) {
 		if (err) {
 			route_callbck(err, null);
 		} else if (data) {
@@ -332,6 +347,12 @@ var myDB_online = function(id, route_callbck) {
 			route_callbck(null, null);
 		}
 	});
+}
+
+// does not work
+var myDB_vis = function (route_callbck) {
+	//simpledb.select({SelectExpression: "select "})
+	route_callbck(null, null);
 }
 
 
@@ -355,7 +376,9 @@ var database = {
   loadFriendShipPostings: myDB_getFriends2,
   findUsers: myDB_findUsers,
   toggleOnline: myDB_toggle,
-  getOn: myDB_online
+  getOn: myDB_online,
+  get_friendrec: myDB_friendrec,
+  getvis: myDB_vis
 };
                                         
 module.exports = database;
