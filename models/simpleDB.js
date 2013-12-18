@@ -3,7 +3,7 @@ AWS.config.loadFromPath('config.json');
 var simpledb = new AWS.SimpleDB();
 
 // creates a new account in the db
-var myDB_createAccount = function(email, password, first_name, last_name, school, birthday, gender, interests, route_callbck){
+var myDB_createAccount = function(email, password, first_name, last_name, school, birthday, gender, interests, image, route_callbck){
 	var error = {};
 	simpledb.getAttributes({DomainName: 'emailID', ItemName: email}, function(err1, data1) {
 		if (err1) { //no users were found
@@ -13,7 +13,7 @@ var myDB_createAccount = function(email, password, first_name, last_name, school
 			// add the user with the new userID
 			var random_id = Math.floor(Math.random()*1000000000000000); // 10^15
 			var random_string = random_id + "";
-			simpledb.putAttributes({DomainName: 'users', ItemName: random_string, Attributes: [{'Name': 'email', 'Value': email},{'Name': 'password', 'Value': password}, {'Name': 'first_name', 'Value': first_name}, {'Name': 'last_name', 'Value': last_name}, {'Name': 'birthday', 'Value': birthday}, {'Name': 'network', 'Value': school}, {'Name': 'gender', 'Value': gender}, {'Name': 'interests', 'Value': interests}]}, function(err2, data2) {
+			simpledb.putAttributes({DomainName: 'users', ItemName: random_string, Attributes: [{'Name': 'email', 'Value': email},{'Name': 'password', 'Value': password}, {'Name': 'first_name', 'Value': first_name}, {'Name': 'last_name', 'Value': last_name}, {'Name': 'birthday', 'Value': birthday}, {'Name': 'network', 'Value': school}, {'Name': 'gender', 'Value': gender}, {'Name': 'interests', 'Value': interests}, {'Name': 'image', 'Value': image}]}, function(err2, data2) {
 				if (err2) {
 					route_callbck("Database add error: " + err2, null);
 				} else {
@@ -362,7 +362,8 @@ var myDB_vis = function (route_callbck) {
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
 
-var database = { 
+var database = {
+  createAccount: myDB_createAccount, 
   loginUser: myDB_login,
   getID: get_ID,
   getProfile: myDB_getProfile,

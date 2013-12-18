@@ -41,7 +41,7 @@ var checkLogin = function(req, res) {
 								res.send(err);
 							} else {
 								res.redirect("/home/" + req.session.username);
-								res.send({id: req.session.username});
+								//res.send({id: req.session.username});
 							}
 						});
 					} else {
@@ -68,13 +68,14 @@ var createAccount = function(req, res) {
 	var birthday = req.body.birthday;
 	var gender = req.body.gender;
 	var interests = req.body.interests;
+	var image = req.body.image;
 	if (email === "" || password1 === "" || password2 === ""
 			|| first_name === "" || last_name === "" || school === "" || interests === "") {
 		res.render("signup.ejs", {error : 1});
 	} else if (password1 != password2) {
 		res.render("signup.ejs", {error : 2});
 	} else {
-		db.createAccount(email, password1, first_name, last_name, school, birthday, gender, interests, function(err, data) {
+		db.createAccount(email, password1, first_name, last_name, school, birthday, gender, interests, image, function(err, data) {
 			if (err) {
 				res.render("signup.ejs", {error : err.value});
 			} else {
@@ -116,6 +117,8 @@ var getProfile = function(req, res){
 						var gender = data[j].Value;
 					} else if(data[j].Name=="interests") {
 						var interests = data[j].Value;
+					} else if(data[j].Name=="image") {
+						var image = data[j].Value;
 					}
 				}
 				profile.firstName = firstName;
@@ -126,7 +129,7 @@ var getProfile = function(req, res){
 				profile.id = id;
 				profile.gender = gender;
 				profile.interests = interests;
-				
+				profile.image = image;
 				res.render("profile.ejs", {profile : profile});
 		}
 	});
@@ -202,12 +205,14 @@ var loadHome = function(req, res){
                 if (err){ return callback(err)
                 }
                 //Check that a user was found
-                else if (data) {
+                else if (data[0] != undefined) {
                 	for(var i=0; i<data[0].length; i++){
 						friend_ids.push(data[0][i].Attributes[0].Value);
-	             	}
+	             	} 
+	             }
                 callback();
-            	}
+            	
+            
             });
         },
         //Load posts (won't be called before task 1's "task callback" has been called)
