@@ -202,7 +202,7 @@ var loadHome = function(req, res){
                 if (err){ return callback(err)
                 }
                 //Check that a user was found
-                else if (data) {
+                else if (data[0] != undefined) {
                 	for(var i=0; i<data[0].length; i++){
 						friend_ids.push(data[0][i].Attributes[0].Value);
 	             	}
@@ -541,8 +541,9 @@ var getName = function(req, res) {
 	});
 }
 
+
 var getProfile2 = function(req, res) {
-	res.send();
+	res.redirect('/profile/' + req.session.username);
 }
 
 var getSuggest = function(req, res) {
@@ -568,6 +569,7 @@ var getSuggest = function(req, res) {
 					console.log("Returned adsfadsf: ");
 					console.log(typeof(returned));
 					res.send(JSON.stringify(returned));
+
 		} else {
 			res.send(null);
 			}

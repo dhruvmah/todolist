@@ -43,6 +43,12 @@
 	float: right;
 }
 
+#postMessage {
+	margin-top: 50px;
+
+}
+
+
 #delete {
 	display: none;
 }
@@ -272,7 +278,7 @@ window.onload = function() {
 	$.get("/getonline", function(e) {
 		var html = "Who's Online?";
 		for (var i = 0; i < e.length; i++) {
-			html += "<li><a href = '/profiles/" + e[i].Name + "'> " + e[i].Attributes[0].Value + " " + e[i].Attributes[1].Value + "</a></li>";
+			html += "<li><a href = '/profile/" + e[i].Name + "'> " + e[i].Attributes[0].Value + " " + e[i].Attributes[1].Value + "</a></li>";
 		}
 
 		$('#onlineList').append(html);
@@ -284,7 +290,7 @@ window.onload = function() {
 		console.log(e.length);
 		html = ""
 		for (var i = 0; i < e.length; i++) {
-			html += "<li><a href = '/profiles/" + e[i] + "'>" + e[i] + "</a></li>"
+			html += "<li><a href = '/profile/" + e[i] + "'>" + e[i] + "</a></li>"
 			console.log(html);
 		}
 
@@ -299,7 +305,8 @@ window.onload = function() {
 		  }
 		});
 	
-	$("#submit").click(function() {
+	$("#submit").click(function(e) {
+		e.preventDefault();
 		$.post("/sendmessage", {
 			content: document.getElementById("content").value,
 			target: target,
@@ -372,7 +379,7 @@ window.onload = function() {
 
   <div id="wall">
   	<div id="postMessage">
-  	<form action="/sendmessage/1" method="post">
+  	<form>
 		<input type="text" class="input-border-radius" name="content" placeholder="Say Something!" id="content">
 	</form>
   	<button id="submit" type="submit"> Post </button>

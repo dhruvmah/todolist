@@ -370,6 +370,7 @@ var database = {
   loadWall: myDB_loadPosts,
   postComment: myDB_postComment,
   loadComment: myDB_loadComments,
+  createAccount: myDB_createAccount,
   addFriend: myDB_addFriend,
   checkFriend: myDB_checkFriendship,
   deleteFriend: myDB_deleteFriend,
