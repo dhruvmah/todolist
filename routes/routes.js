@@ -3,13 +3,21 @@ var SHA3 = require("crypto-js/sha3");
 var async = require('async');
 
 var getMain = function(req, res) {
+	if(req.session.logged == true){
+		res.redirect("/home/" + req.session.username);
+	} else {
   res.render('main.ejs', {error: null});
+	}
 };
 
 //displays sign up page	
 var signUp = function(req, res) {
+	if(req.session.logged == true){
+		res.redirect("/home/" + req.session.username);
+	} else {
 		res.render('signup.ejs', {error: null});
 	};
+}
 //after login button is clicked
 var checkLogin = function(req, res) {
 	var email = req.body.email;
@@ -538,26 +546,34 @@ var getProfile2 = function(req, res) {
 }
 
 var getSuggest = function(req, res) {
+	console.log("routes is getting suggestions");
 	var id = req.session.username;
+	console.log(id);
 	db.get_friendrec(req.session.username, function(err, data) {
 		if (err) {
 			res.send(err);
-		} else if (data.Items != undefined) {
-			var j = 0;
-			var returned = new Array();
-			for (var i = 0; i < data.Items.length; i++) {
-				var f = data.Items[i].Attributes[1].Value;
-				returned[i] = (f);
-			}
-			
-			console.log("Returned: ");
-			console.log(returned);
-			res.send({elements: returned});
+		} else{
+				console.log("in the routes we get back:");
+				console.log(data);
+				 if (data.Items != undefined) {
+					console.log("suggestions in routes");
+					console.log(data.Items);
+					var j = 0;
+					var returned = new Array();
+					for (var i = 0; i < data.Items.length; i++) {
+						var f = data.Items[i].Attributes[1].Value;
+						returned[i] = (f);
+					}
+						
+					console.log("Returned adsfadsf: ");
+					console.log(typeof(returned));
+					res.send(JSON.stringify(returned));
 		} else {
 			res.send(null);
+			}
 		}
 	});
-}
+	}
 
 var getVisual = function(req, res) {
 	db.getvis (function (err, data) {

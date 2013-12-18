@@ -338,11 +338,13 @@ var myDB_online = function(id, route_callbck) {
 
 // returning correct thing
 var myDB_friendrec = function (id, route_callbck) {
+	console.log("in db we have: " + id);
 	simpledb.select({SelectExpression: "select user, friend from recommendations where user='" + id + "' limit 5", ConsistentRead: true}, function (err, data) {
 		if (err) {
 			route_callbck(err, null);
 		} else if (data) {
 			route_callbck(null, data);
+			console.log(data);
 		} else {
 			route_callbck(null, null);
 		}

@@ -10,7 +10,6 @@
 
 <style type="text/css">
 .wall-post {
-	width: 60%;
 	padding: 4px;
 	margin: 4px;
 	border: 1px solid black;
@@ -27,8 +26,8 @@
 }
 
 #wall {	
+	margin-left: 18%;
 	float:left;
-	width: 60%;
 }
 
 .hide {
@@ -75,23 +74,27 @@
   	background-color: #dddddd;	
 }
 
+#right-column {
+float: right;
+height: 800px;
+border-left: 1px solid black;
+margin-bottom: 1px solid black;
+}
+
 #test {
 	border: 1px solid black;
-	margin-left:500px;
 	margin-top: 50px;
+	margin-right: 10%;
 	width: 200px;
-	height: 250px;
 }
 
 #sugg {
 	border: 1px solid black;
-	margin-left: 500px;
-	margin-top: 300px;
 	width: 200px;
-	height: 250px;
 }
 
 #visual {
+	display: none;
 	border: 1px solid black;
 	margin-left: 500px;
 	margin-top:550px;
@@ -101,6 +104,58 @@
 </style>
 
 <script type="text/javascript">
+
+var getDate = function(input){
+	var date = new Date(0); // The 0 there is the key, which sets the date to the epoch
+	date.setUTCSeconds(parseInt(input));
+	var dayNumber = date.getDay();
+	if(dayNumber == 0) {
+		var day = "Sunday";
+	} else if(dayNumber == 1) {
+		var day = "Monday";
+	}else if(dayNumber == 2) {
+		var day = "Tuesday";
+	}else if(dayNumber == 3) {
+		var day = "Wednesday";
+	}else if(dayNumber == 4) {
+		var day = "Thursday";
+	}else if(dayNumber == 5) {
+		var day = "Friday";
+	}else if(dayNumber == 6) {
+		var day = "Saturday";
+	}
+
+	var monthNum = date.getMonth();
+
+	if(monthNum == 0) {
+		var month = "January";
+	} else if(monthNum == 1) {
+		var month = "February";
+	}else if(monthNum == 2) {
+		var month = "March";
+	}else if(monthNum == 3) {
+		var month = "April";
+	}else if(monthNum == 4) {
+		var month = "May";
+	}else if(monthNum == 5) {
+		var month = "June";
+	}else if(monthNum == 6) {
+		var month = "July";
+	}else if(monthNum == 7) {
+		var month = "August";
+	}else if(monthNum == 8) {
+		var month = "September";
+	}else if(monthNum == 9) {
+		var month = "October";
+	}else if(monthNum == 10) {
+		var month = "November";
+	}else if(monthNum == 11) {
+		var month = "December";
+	}
+
+
+	return (day + ", " + month + " " + date.getDate() + ", " + date.getFullYear());
+}
 
  <!-- 
     function updateSugg() {
@@ -134,10 +189,10 @@ var load_newsfeed = function(id) {
 	var get_comments = function (id, callback){ 
 		var commentList = [];
 		$.getJSON('/loadcomments/' + id, function(comments){
-			for (var j=comments.length-1; j>-1; j--){
+			for (var j= 0; j<comments.length; j++){
 				commentList.push(comments[j]);
-				$("#"+id).append('<div class="all_comm"><p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
-						"<p class='comments' style='font-style:italic'> Posted at: " + comments[j].timeStamp + "</p></div>" );
+				$("#"+id).append('<div class="all_comm"><p class="comments">' + '<a href="/profile/' + comments[j].creator +' ">' + comments[j].creator + "</a>: "+ comments[j].content + "</p> " +
+						"<p class='comments' style='font-style:italic'>" + getDate(comments[j].timeStamp) + "</p></div>" );
 			}
 		callback(id, commentList);
 		});
@@ -151,7 +206,7 @@ var load_newsfeed = function(id) {
 					comment_tag = elements[i].comment_tag;
 					html += "<div class= \' wall-post \' >"
 								+ "<div class = \' tofrom \'>"
-									+ "At " + elements[i].timeStamp + ", <a href=\'/profile/" + 
+									+ "On " + getDate(elements[i].timeStamp) + ", <a href=\'/profile/" + 
 									elements[i].creator+ "\'>" + elements[i].creator + "</a>" +
 							" wrote: </div>" +
 								'<div id="' + elements[i].comment_tag + '" >' + elements[i].content + "<br />Comments: </div>"
@@ -181,7 +236,7 @@ var load_newsfeed = function(id) {
 								alert('Uh Oh, looks like something went wrong.');
 								} else {
 									document.getElementById("content").value = "";
-									load_posts(target);
+									load_newsfeed(target);
 								}
 							}
 						);	
@@ -217,21 +272,23 @@ window.onload = function() {
 	$.get("/getonline", function(e) {
 		var html = "Who's Online?";
 		for (var i = 0; i < e.length; i++) {
-			html += "<div><a href = '/profiles/" + e[i].Name + "'> " + e[i].Attributes[0].Value + " " + e[i].Attributes[1].Value + "</a></div>";
+			html += "<li><a href = '/profiles/" + e[i].Name + "'> " + e[i].Attributes[0].Value + " " + e[i].Attributes[1].Value + "</a></li>";
 		}
 
-		$('#test').append(html);
+		$('#onlineList').append(html);
 
 	})
 
-	$.get("/getsuggestions", function(e) {
-		var html = "People You May Know";
-		for (var i = 0; i < e.elements.length; i++) {
-			html += "<div><a href = '/profiles/" + e.elements[i].Name + "'>" + e.elements[i].Name + "</a></div>"
+	$.getJSON("/getsuggestions/", function(e) {
+		console.log(e);
+		console.log(e.length);
+		html = ""
+		for (var i = 0; i < e.length; i++) {
+			html += "<li><a href = '/profiles/" + e[i] + "'>" + e[i] + "</a></li>"
 			console.log(html);
 		}
 
-		$('#sugg').append(html);
+		$('#suggList').append(html);
 
 	})
 		
@@ -255,7 +312,7 @@ window.onload = function() {
 				alert('Uh Oh, looks like something went wrong.');
 				} else {
 					document.getElementById("content").value = "";
-					load_posts(target);
+					load_newsfeed(target);
 				}
 			}
 		);
@@ -297,14 +354,22 @@ window.onload = function() {
         </div><!--/.nav-collapse -->
       </div>
     </div>
+
+
     <div class="search-stuff" id="xyz"></div>
 
-	<div class="friend_suggest"> </div>
+  <div id="right-column">
+	  <div class="#test" id="test">
+	  	<ul id="onlineList">
+	  	</ul>
+	  </div>
+	  <div id="sugg"> <h3> People You May Know </h3> 
+		<ul id="suggList">
+	  	</ul>
+	  </div>
+</div>
 
-<br>
-<br>
-<br>
-<br>
+
   <div id="wall">
   	<div id="postMessage">
   	<form action="/sendmessage/1" method="post">
@@ -316,15 +381,6 @@ window.onload = function() {
   	</div>
   </div>
 
-  <div class="#test" id="test">
-  </div>
-
-  <div class="#sugg" id="sugg"> </div>
-
-  <div class="visual" style="width:200px">
-  		<form action="/visualize" method="get">
-  			<input type="submit" value="Visualize Your Network" class="btn btn-lg btn-inverse btn-block">
-  </div>
 
 
 </body>
