@@ -181,8 +181,20 @@ var myDB_loadPosts = function(id, route_callbck){
   });
 };
 
+var myDB_loadAllPosts = function(id, route_callbck){
+  simpledb.select({SelectExpression: "select * from messages where target = \'" + String(id) + "\' or creator = \'" +
+   String(id) + "\'", ConsistentRead: true
+	  }, function (err, data) {
+    if (err) {
+      route_callbck("Lookup error: "+err, null);
+    } else {
+      route_callbck(null, data);
+    }
+  });
+};
+
 var myDB_loadComments = function(id, route_callbck){
-	  simpledb.select({SelectExpression: "select * from commentlist where post_tag = \'" + String(id) + "\'", ConsistentRead: true
+	  simpledb.select({SelectExpression: "select * from messages where post_tag = \'" + String(id) + "\'", ConsistentRead: true
 		  }, function (err, data) {
 	    if (err) {
 	      route_callbck("Lookup error: "+err, null);
@@ -191,6 +203,35 @@ var myDB_loadComments = function(id, route_callbck){
 	    }
 	  });
 }
+
+
+var myDB_getFriends = function(id, route_callbck){
+	  var datas = []
+	  simpledb.select({SelectExpression: "select f2 from friendships where f1 = \'" + String(id) + "\'"
+	  	, ConsistentRead: true
+		}, function (err, data) {
+	    	if (err) {
+	      		route_callbck("Lookup error: "+ err, null);
+	    	} else if (data) {
+	    		if(data.Items != undefined){
+	    			datas.push(data.Items);
+	    		}
+	      		simpledb.select({SelectExpression: "select f1 from friendships where f2 = \'" + String(id) + "\'"
+	  			, ConsistentRead: true
+						}, function (err1, data1) {
+	    					if (err1) {
+					      		route_callbck("Lookup error: "+err, null);
+					    	} else if (data1) {
+					    		if(data1.Items != undefined){
+	    							datas.push(data1.Items);
+	    						}
+					      		route_callbck(null, datas);
+						    }
+					  	});
+			}
+		});
+	}
+
 
 var myDB_addFriend = function(friendOne, friendTwo, timeStamp, route_callbck){
 	if(parseInt(friendOne) > parseInt(friendTwo)){
@@ -202,8 +243,9 @@ var myDB_addFriend = function(friendOne, friendTwo, timeStamp, route_callbck){
 		var f1 = friendTwo;
 		var f2 = friendOne;
 	}
+	console.log(itemName + f1 + f2 + timeStamp);
 	simpledb.putAttributes({DomainName:'friendships', ItemName:(itemName),
-		Attributes:[{Name:"f1", Value: f1}, {Name:"f2", Value: f2}, {Name: "timeStamp", Value:timeStamp}]},
+		Attributes:[{Name:"f1", Value: f1}, {Name:"f2", Value: f2}, {Name: "timeStamp", Value: timeStamp}]},
 		function(err, data){
 			if(err) {
 				console.log(err);
@@ -277,7 +319,9 @@ var database = {
   loadComment: myDB_loadComments,
   addFriend: myDB_addFriend,
   checkFriend: myDB_checkFriendship,
-  deleteFriend: myDB_deleteFriend
+  deleteFriend: myDB_deleteFriend,
+  getFriends: myDB_getFriends,
+  loadAllPosts: myDB_loadAllPosts
 };
                                         
 module.exports = database;

@@ -6,6 +6,7 @@
 
 var express = require('express');
 var routes = require('./routes/routes.js');
+var async = require('async');
 var app = express();
 
 app.use(express.bodyParser());

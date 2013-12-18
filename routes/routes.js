@@ -1,5 +1,6 @@
 var db = require('../models/simpleDB.js');
 var SHA3 = require("crypto-js/sha3");
+var async = require('async');
 
 var getMain = function(req, res) {
   res.render('main.ejs', {error: null});
@@ -7,11 +8,7 @@ var getMain = function(req, res) {
 
 //displays sign up page	
 var signUp = function(req, res) {
-	if(req.session.logged){
-		res.redirect('/restaurants');
-	} else {
 		res.render('signup.ejs', {error: null});
-		}
 	};
 //after login button is clicked
 var checkLogin = function(req, res) {
@@ -66,10 +63,9 @@ var createAccount = function(req, res) {
 			} else {
 				req.session.logged = true;
 				console.log(data);
-				req.session.username = data.Attributes[0].Value;
+				req.session.username = data;
 				res.redirect("/profile/76705186394974");
 			}
-		
 		});
 	}
 };
@@ -172,17 +168,65 @@ var postComment = function(req, res) {
 };
 
 
-//TODO: loadHome - fetches all statuses, posts and frienships made of friends
+//TODO: loadHome - fetches all statuses, posts and friendships made of friends
 var loadHome = function(req, res){
-	s
+	var id = req.params.id;
+	var friend_ids = [];
+	var posts = [];
+	console.log('reached load home in routes');
 	
-	
-	
-	
-	
-	
-	
-}
+	 async.series([
+        //Load user to get userId first
+        function(callback) {
+            db.getFriends(id, function(err, data) {
+                if (err){ return callback(err)
+                }
+                //Check that a user was found
+                else if (data) {
+                	for(var i=0; i<data[0].length; i++){
+						console.log(data[0][i].Attributes[0].Value);
+						friend_ids.push(data[0][i].Attributes[0].Value);
+	             	}
+                callback();
+            	}
+            });
+        },
+        //Load posts (won't be called before task 1's "task callback" has been called)
+        function(callback) {
+        		console.log("okay this all works");
+        		console.log(friend_ids);
+        		loadPostsWithUserIds(friend_ids, function(err, posts){
+        			if(err) return callback(err);
+        			posts.push = posts;
+        			callback();
+        		})
+        }
+    ], function(err) { //This function gets called after the two tasks have called their "task callbacks"
+        console.log("done with everything, now lets do shit");
+   	});
+};
+
+function loadPostsWithUserIds(friend_ids, callback) {
+	posts = [];
+	async.forEach(friend_ids, function(friend_id, callback) {
+            db.loadAllPosts(friend_id, function(err, data){
+            	if(data) {
+            		console.log("in the .foreach loop:");
+            		if(data.Items !== undefined){
+            			console.log(data.Items);
+						for(var i = 0; i<data.Items.length; i++) {
+	                    	console.log(data.Items[i].Attributes[0].Value);
+	                    }
+	            		posts.push(data);
+	            	}
+            	} 
+            	callback();
+            });
+        }, function(err) {
+            if (err) return callback(err);
+            callback(null, posts);
+        });
+};
 
 //fetches wall posts for a profile page
 var loadWall = function(req, res) {
@@ -194,6 +238,7 @@ var loadWall = function(req, res) {
 			res.send("error on restaurants");
 		} else if(data) {
 			posts = [];
+			if(data.Items != undefined){
 			for(i=0; i<data.Items.length; i++){
 				nextPost = new Object();
 				var name = data.Items[i].Name;
@@ -212,6 +257,7 @@ var loadWall = function(req, res) {
 						var target = data.Items[i].Attributes[j].Value;
 					}
 				}
+
 				nextPost.content = content;
 				nextPost.timeStamp = timeStamp;
 				nextPost.like_count = like_count;
@@ -223,6 +269,7 @@ var loadWall = function(req, res) {
 			console.log(JSON.stringify(posts));
 			res.send(JSON.stringify(posts));			
 		}
+	}
 	});
 };
 
