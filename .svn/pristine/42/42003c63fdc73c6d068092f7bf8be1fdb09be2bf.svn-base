@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>PennBook</h1>
+  <form action="/checklogin" method="post">
+    <input type="text" name="email" placeholder="Email"><br>
+	<input type="password" name="password" placeholder="Password"><br>
+	<input type="submit" value="Login">
+  </form>
+  <br></br>
+  Don't have an account?
+  <form action="/signup" method="get">
+  <input type="submit" value="Sign Up">
+  </form>
+
+  <% if (error) { %>
+ <%  if (error === 1){ %>
+  		<font color="red"> Fields cannot be left blank.</font>
+   <%}else if (error === 2) {%>
+  		<font color="red"> User does not exist.</font>		
+     <%}else if (error === 3){ %>
+  		<font color="red"> Incorrect password.</font>
+	<%} %>
+		<%} %>
+</body>
+<footer>
+  <p>Authors: Dhruv Maheshwari (dhruvm) & Corey Loman (loman)</p>
+</footer>
+</html>

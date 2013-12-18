@@ -1,0 +1,283 @@
+var db = require('../models/simpleDB.js');
+var SHA3 = require("crypto-js/sha3");
+
+var getMain = function(req, res) {
+  res.render('main.ejs', {error: null});
+};
+
+//displays sign up page	
+var signUp = function(req, res) {
+	if(req.session.logged){
+		res.redirect('/restaurants');
+	} else {
+		res.render('signup.ejs', {error: null});
+		}
+	};
+//after login button is clicked
+var checkLogin = function(req, res) {
+	var email = req.body.email;
+	var password = SHA3(req.body.password).toString();
+	if (email === "" || password === "") {
+		res.render('main.ejs', {error: 1});
+	} else {
+	db.getID(email, function(err, user_id){
+		if(err){
+		    res.render('main.ejs', {error: err.value});
+		} else {
+			db.loginUser(user_id.Attributes[0].Value, password, function(err, data){
+				if(err){
+					res.render('main.ejs', {error:err.value});
+				} else {
+					if (data.logged_in === true) {
+						req.session.logged =true; 
+						req.session.username = user_id.Attributes[0].Value;
+						res.redirect("/profile/76705186394974");
+					} else {
+						res.render('main.ejs', {error: 1});
+					}
+				}
+			});
+		}
+	});
+	}
+};
+
+//after create account button is pressed
+var createAccount = function(req, res) {
+	if(req.session.logged){
+		res.redirect('/home');
+	}
+	var email = req.body.email;
+	var password1 = SHA3(req.body.password1).toString();
+	var password2 = SHA3(req.body.password2).toString();
+	var first_name = req.body.first_name;
+	var last_name = req.body.last_name;
+	var school = req.body.school;
+	var birthday = req.body.birthday;
+	if (email === "" || password1 === "" || password2 === ""
+			|| first_name === "" || last_name === "" || school === "") {
+		res.render("signup.ejs", {error : 1});
+	} else if (password1 != password2) {
+		res.render("signup.ejs", {error : 2});
+	} else {
+		db.createAccount(email, password1, first_name, last_name, school, birthday, function(err, data) {
+			if (err) {
+				res.render("signup.ejs", {error : err.value});
+			} else {
+				req.session.logged = true;
+				console.log(data);
+				req.session.username = data.Attributes[0].Value;
+				res.redirect("/profile/76705186394974");
+			}
+		
+		});
+	}
+};
+
+//gets profile information
+var getProfile = function(req, res){
+	var id = req.params.id;
+	console.log(id);
+	db.getProfile(id, function(err, data) {
+		if (err) {
+			console.log(err);
+			res.render("error.ejs");
+		} else if (data) {
+				console.log(data);
+				profile = {};
+				for( j=0; j<data.length; j++) {
+					if(data[j].Name == "email") {
+						var email = data[j].Value;
+					} else if(data[j].Name=="network") {
+						var network = data[j].Value;
+					} else if(data[j].Name=="birthday") {
+						var birthday = data[j].Value;						
+					} else if(data[j].Name=="first_name") {
+						var firstName = data[j].Value;
+					} else if(data[j].Name=="last_name") {
+						var lastName = data[j].Value;
+					}
+				}
+				profile.firstName = firstName;
+				profile.lastName = lastName;
+				profile.birthday = birthday;
+				profile.network = network;
+				profile.email = email;
+				profile.id = id;
+				
+				res.render("profile.ejs", {profile : profile});
+		}
+	});
+}
+
+//sets posts (ie. statuses or wall posts)
+var sendMessage = function(req, res) {
+	console.log("routes reached");
+	
+	if(req.session.username === req.body.target) {
+		var type = "1";
+	} else {
+		var type = "2";
+	}
+	//1 = status
+	//2 = wall post
+	//3 = private message
+	
+	//only difference between them is the creator and privacy
+	
+	var content = String(req.body.content);
+	console.log(req.session.username);
+	var creator = String(req.session.username);
+	var target = String(target);
+	var timeStamp = String(new Date() / 1000);
+	var pvt = req.body.pvt;
+	if(type === "1") {
+		var target = String(req.session.username);
+	} else if (type === "2"){
+		var target = req.body.target;
+	} 
+	if (content === "") {
+		res.send("error");
+	}  else {
+		db.sendMessage(content, creator, target, pvt, timeStamp, function(err, data) {
+			if (err) {
+				res.send("error");
+			} else {
+				res.send("success!");
+			}
+		});
+	}
+};
+
+
+//posts comment on a post
+var postComment = function(req, res) {
+	console.log("routes post comment reached");
+	var content = String(req.body.content);
+	var tag = String(req.body.tag);
+	console.log(content);
+	console.log(tag);
+	var creator = String(req.session.username);
+	var timeStamp = String(new Date() / 1000);
+	if (content === "") {
+		res.send("error");
+	}  else {
+		db.postComment(content, creator, tag, timeStamp, function(err, data) {
+			if (err) {
+				res.send("error");
+			} else {
+				res.send("success!");
+			}
+		});
+	}
+};
+
+//fetches restaurants
+var loadWall = function(req, res) {
+	var id = req.params.id;
+	console.log(id);
+	console.log("reached load Wall");
+	db.loadWall(id, function(err, data){
+		if(err){
+			res.send("error on restaurants");
+		} else if(data) {
+			posts = [];
+			for(i=0; i<data.Items.length; i++){
+				nextPost = new Object();
+				var name = data.Items[i].Name;
+				for( j=0; j<data.Items[i].Attributes.length; j++) {
+					if(data.Items[i].Attributes[j].Name == "content") {
+						var content = data.Items[i].Attributes[j].Value;
+					} else if(data.Items[i].Attributes[j].Name=="timeStamp") {
+						var timeStamp = data.Items[i].Attributes[j].Value;
+					} else if(data.Items[i].Attributes[j].Name=="like_count") {
+						var like_count = data.Items[i].Attributes[j].Value;						
+					} else if(data.Items[i].Attributes[j].Name=="creator") {
+						var creator = data.Items[i].Attributes[j].Value;
+					} else if(data.Items[i].Attributes[j].Name=="comment_tag") {
+						var comment_tag = data.Items[i].Attributes[j].Value;
+					} else if(data.Items[i].Attributes[j].Name=="target") {
+						var target = data.Items[i].Attributes[j].Value;
+					}
+				}
+				nextPost.content = content;
+				nextPost.timeStamp = timeStamp;
+				nextPost.like_count = like_count;
+				nextPost.comment_tag = comment_tag;
+				nextPost.creator = creator;
+				nextPost.target = target;
+				posts.push(nextPost);
+				}
+			console.log(JSON.stringify(posts));
+			res.send(JSON.stringify(posts));			
+		}
+	});
+};
+
+//fetches restaurants
+var loadComment = function(req, res) {
+	var id = req.params.id;
+	console.log(id);
+	console.log("reached load comment");
+	db.loadComment(id, function(err, data){
+		if(err){
+			res.send("error on restaurants");
+		} else if(data) {
+			console.log("returned data");
+			comments = [];
+			if(data.Items !== undefined) {
+				for(i=0; i<data.Items.length; i++){
+					nextComment = new Object();
+					var name = data.Items[i].Name;
+					for( j=0; j<data.Items[i].Attributes.length; j++) {
+						if(data.Items[i].Attributes[j].Name == "content") {
+							var content = data.Items[i].Attributes[j].Value;
+						} else if(data.Items[i].Attributes[j].Name=="timeStamp") {
+							var timeStamp = data.Items[i].Attributes[j].Value;
+						} else if(data.Items[i].Attributes[j].Name=="like_count") {
+							var like_count = data.Items[i].Attributes[j].Value;						
+						} else if(data.Items[i].Attributes[j].Name=="creator") {
+							var creator = data.Items[i].Attributes[j].Value;
+						} else if(data.Items[i].Attributes[j].Name=="post_tag") {
+							var post_tag = data.Items[i].Attributes[j].Value;
+						}
+					}
+					nextComment.content = content;
+					nextComment.timeStamp = timeStamp;
+					nextComment.like_count = like_count;
+					nextComment.post_tag = post_tag;
+					nextComment.creator = creator;
+					console.log(nextComment);
+					comments.push(nextComment);
+					
+					}
+			}
+			console.log(JSON.stringify(comments));
+			res.send(JSON.stringify(comments));			
+		}
+	});
+}; 
+
+
+
+//after logout button is pressed
+var logout = function(req, res) {
+	req.session.logged = false;
+	res.redirect('/');
+};
+
+
+var routes = { 
+  get_main: getMain,
+  check_login: checkLogin,
+  create_account: createAccount,
+  sign_up: signUp,
+  logout: logout,
+  get_profile:getProfile,
+  send_message:sendMessage,
+  load_wall: loadWall,
+  post_comment: postComment,
+  load_comments:loadComment
+};
+
+module.exports = routes;

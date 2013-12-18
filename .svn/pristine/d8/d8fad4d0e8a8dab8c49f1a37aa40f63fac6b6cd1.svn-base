@@ -1,0 +1,123 @@
+var db = require('../models/simpleDB.js');
+var SHA3 = require("crypto-js/sha3");
+
+var getMain = function(req, res) {
+  res.render('main.ejs', {error: null});
+};
+
+//displays sign up page	
+var signUp = function(req, res) {
+	if(req.session.logged){
+		res.redirect('/restaurants');
+	} else {
+		res.render('signup.ejs', {error: null});
+		}
+	};
+//after login button is clicked
+var checkLogin = function(req, res) {
+	var email = req.body.email;
+	var password = SHA3(req.body.password).toString();
+	if (email === "" || password === "") {
+		res.render('main.ejs', {error: 1});
+	} else {
+	db.getID(email, function(err, user_id){
+		if(err){
+		    res.render('main.ejs', {error: err.value});
+		} else {
+			db.loginUser(user_id.Attributes[0].Value, password, function(err, data){
+				if(err){
+					res.render('main.ejs', {error:err.value});
+				} else {
+					if (data.logged_in === true) {
+						req.session.logged =true; 
+						req.session.username = user_id;
+						res.redirect("/home");
+					} else {
+						res.render('main.ejs', {error: 1});
+					}
+				}
+			});
+		}
+	});
+	}
+};
+
+//after create account button is pressed
+var createAccount = function(req, res) {
+	if(req.session.logged){
+		res.redirect('/home');
+	}
+	var email = req.body.email;
+	var password1 = SHA3(req.body.password1).toString();
+	var password2 = SHA3(req.body.password2).toString();
+	var first_name = req.body.first_name;
+	var last_name = req.body.last_name;
+	var school = req.body.school;
+	var birthday = req.body.birthday;
+	if (email === "" || password1 === "" || password2 === ""
+			|| first_name === "" || last_name === "" || school === "") {
+		res.render("signup.ejs", {error : 1});
+	} else if (password1 != password2) {
+		res.render("signup.ejs", {error : 2});
+	} else {
+		db.createAccount(email, password1, first_name, last_name, school, birthday, function(err, data) {
+			if (err) {
+				res.render("signup.ejs", {error : err.value});
+			} else {
+				req.session.logged = true;
+				req.session.username = data;
+				res.redirect("/home");
+			}
+		
+		});
+	}
+};
+
+//gets profile information
+var getProfile = function(req, res){
+	var id = req.params.id;
+	db.getProfile(id, function(err, data) {
+		if (err) {
+			res.render("errorPage.ejs");
+		} else if (data) {
+				user = {}
+				for( j=0; j<data.Attributes.length; j++) {
+					if(data.Attributes[j].Name == "email") {
+						var email = data.Attributes[j].Value;
+					} else if(data.Attributes[j].Name=="school") {
+						var school = data.Attributes[j].Value;
+					} else if(data.Attributes[j].Name=="birthday") {
+						var birthday = data.Attributes[j].Value;						
+					} else if(data.Attributes[j].Name=="first_name") {
+						var firstName = data.Attributes[j].Value;
+					} else if(data.Attributes[j].Name=="last_name") {
+						var lastName = data.Attributes[j].Value;
+					}
+				}
+				user["firstName"] = firstName;
+				user["lastName"] = lastName;
+				user["birthday"] = birthday;
+				user["school"] = school;
+				user["email"] = email;
+				res.render("profile.ejs", {user : user});
+		}
+	});
+}
+
+//after logout button is pressed
+var logout = function(req, res) {
+	req.session.logged = false;
+	res.redirect('/');
+};
+
+
+var routes = { 
+  get_main: getMain,
+  check_login: checkLogin,
+  create_account: createAccount,
+  sign_up: signUp,
+  logout: logout,
+  get_profile:getProfile
+};
+
+module.exports = routes;

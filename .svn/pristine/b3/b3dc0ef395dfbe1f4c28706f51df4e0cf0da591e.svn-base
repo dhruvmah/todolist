@@ -1,0 +1,132 @@
+var AWS = require('aws-sdk');
+AWS.config.loadFromPath('config.json');
+var simpledb = new AWS.SimpleDB();
+
+// This function gets all the restaurants to display in the table
+var myDB_restaurants = function(route_callbck){
+  simpledb.select({SelectExpression: "select * from restaurants", ConsistentRead: true
+	  }, function (err, data) {
+    if (err) {
+      route_callbck("Lookup error: "+err, null);
+    } else {
+      route_callbck(null, data);
+    }
+  });
+};
+
+// creates a new account in the db
+var myDB_createAccount = function(username, password, fullname, route_callbck){
+	if(username ==="" || password ===  "" || fullname ===""){
+		route_callbck({value:1}, null);
+	} else {
+	// first need to check if user is already a user
+	simpledb.getAttributes({DomainName:'users', ItemName: username}, function(err, data){
+		var error={};
+		if(err){
+			error.value = 1;
+			route_callbck(error, null);
+		} else if (data.Attributes === undefined) {
+			// put attributes, only if inputted name is not already a user
+			simpledb.putAttributes({DomainName:'users', ItemName:username,
+				Attributes:[{Name:'fullname', Value: fullname}, {Name:"password", Value: password}]},
+				function(err2, data2){
+					if(err2) {
+						error.value = 2;
+						route_callbck(error, null);
+					} else if (data2) {
+						results = {};
+						results.created = true;
+						route_callbck(null, results);
+					}
+				});
+		} else {
+			error.value = 3;
+			route_callbck(error, null);
+		}
+	});
+	}
+};
+
+//handles logging in
+var myDB_login = function(username, password, route_callbck){
+	var error = {};
+	if(username ===null || username === "" || password === null || password === "") {
+		route_callbck({value:1}, null);
+	} else {
+	simpledb.getAttributes({DomainName:'users', ItemName: username}, function(err, data){
+		if (err) {
+			if(err.name === 'MissingParameter') {
+				error.value = 1;
+				route_callbck(error, null);
+			}
+		} else if (data.Attributes === undefined) {
+			error.value=2;
+			route_callbck(error,null);
+		} else {
+			var results = {};
+			for(var i = 0; i<data.Attributes.length; i++) {
+				if (data.Attributes[i].Name === "password"){
+					var logged_in =  data.Attributes[i].Value === password;
+					if(logged_in) {
+						results.logged_in = (logged_in);	
+						route_callbck(null, results);
+					} else {
+						error.value = 3;
+						route_callbck(error, null);
+					}
+				}
+			}
+		}
+	});
+	}
+};
+
+//adds restaurant to the database
+var myDB_addRestaurant = function(name, latitude, longitude, description, creator, route_callbck){
+	if(name ===null || latitude === "" || longitude === null || description === "" || creator === "") {
+		//missing a parameter
+		var results = {};
+		results.added = false;
+		route_callbck(null, results);
+	} else {
+
+		simpledb.getAttributes({DomainName:'restaurants', ItemName: name}, function(err, data){
+			if(err){
+				route_callbck(err, null);
+			} else if (data.Attributes === undefined) {
+				simpledb.putAttributes({DomainName:'restaurants', ItemName:name,
+					Attributes:[{Name:'latitude', Value: latitude}, {Name:"longitude", Value: longitude}, {Name:"description", Value: description}
+					, {Name:"creator", Value: creator}]},
+					function(err2, data2){
+						if(err2) {
+							route_callbck(err2, null);
+						} else if (data2) {
+							results = {};
+							results.added = true;
+							route_callbck(null, results);
+						} else route_callbck(null, null);
+					});
+			} else {
+				//resturant is already in the database
+				results = {};
+				results.added = false;
+				route_callbck(null, results);
+			}
+		});
+	}
+};
+
+
+/* We define an object with one field for each method. For instance, below we have
+   a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
+   then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
+
+var database = { 
+  loginUser: myDB_login,
+  createAccount: myDB_createAccount,
+  findRestaurants: myDB_restaurants,
+  addRestaurant: myDB_addRestaurant
+};
+                                        
+module.exports = database;
+                                        

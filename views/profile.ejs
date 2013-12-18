@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title> Profile </title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+<link rel="stylesheet" href="http://localhost:8080/css/bootstrap.css">
+
+<style type="text/css">
+.wall-post {
+	width: 60%;
+	padding: 4px;
+	margin: 4px;
+	border: 1px solid black;
+	}
+
+#nav {
+	display: none;
+	margin-top: 0px;
+	width: 100%;
+	border: 1px solid black;
+}
+#nav li {
+	display: inline-block;
+}
+
+#wall {	
+	float:right;
+	width: 60%;
+}
+
+.hide {
+	display: none;
+}
+
+.header {
+	display: none;
+	padding: 5px;
+	margin: 10px;
+	width: 60%;
+	border: 1px solid black;
+	float: right;
+}
+
+#delete {
+	display: none;
+}
+
+.comments {
+	border-top: 1px solid black;
+	
+}
+</style>
+
+<script type="text/javascript">
+
+
+var getProfileId = function() {
+	var url = String(window.location);
+	console.log(url);
+	var split = url.split("/");
+	console.log(split);
+	var id = split[4];
+	return id;
+};
+
+var load_posts = function(id) {
+	var get_comments = function (id, callback){ 
+		var commentList = [];
+		$.getJSON('http://127.0.0.1:8080/loadcomments/' + id, function(comments){
+			for (var j=comments.length-1; j>-1; j--){
+				console.log(comments[j]);
+				commentList.push(comments[j]);
+				$("#"+id).append('<p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
+						"<p> Posted at: " + comments[j].creator + "</p>" );
+			}
+		callback(id, commentList);
+		});
+	}
+	
+	$.getJSON('http://127.0.0.1:8080/loadwall/' + id, function(elements){
+		var html = "";
+		for(var i=elements.length-1; i>-1; i--) {
+			comment_tag = elements[i].comment_tag;
+			html += "<div class= \' wall-post \' >"
+						+ "<div class = \' tofrom \'>"
+							+ "At " + elements[i].timeStamp + ", <a href=\'http://127.0.0.1:8080/profile/" + 
+							elements[i].creator+ "\'>" + elements[i].creator + "</a>" +
+					" wrote: </div>" +
+						'<div id="' + elements[i].comment_tag + '" >' + elements[i].content + "<br />Comments: </div>"
+					+ "</div>";
+			get_comments(elements[i].comment_tag, function(id, commentList) {
+				
+			});
+			
+			html += '<form id = "' + elements[i].comment_tag + '">'+ 
+			"<input class=\"content\" type=\'text\' name=\"comment\" placeholder=\"leave a comment\" >" +
+			'<input class="hide" type="text" name="comment_tag" value = "' +comment_tag + '">' +
+			'<button class="postcomment" id="' + comment_tag + '"> Post Comment </button>' +
+			'</form>';
+			
+			$("#posts").html(html);
+			
+			$(".postcomment").on('click', function(e) {
+				e.preventDefault();
+				console.log(event);
+				console.log("hey it clicked");
+				var content = $(this).parent().find(".content").val();
+				var tag = $(this).parent().find(".hide").val();
+				$.post("http://127.0.0.1:8080/postcomment", {
+					content: content,
+					tag: tag,
+				}, function(data, status) {
+					//check for empty strings
+					if(document.getElementById(comment_tag).value === "") {
+							alert("No Post");				
+						}else if(data === "error") {
+						alert('Uh Oh, looks like something went wrong.');
+						} else {
+							console.log(target);
+							document.getElementById("content").value = "";
+							load_posts(target);
+						}
+					}
+				);	
+			});
+		<!--closes the for loop --!>
+		}
+	});
+};
+
+window.onload = function() {
+	$('.header').fadeIn(1000);
+	$('#nav').fadeIn(1000);
+	
+	target = getProfileId();
+	load_posts(target);
+	
+	$.get("http://127.0.0.1:8080/checkfriend/" + target, {}, function(data, status){
+		if(!data){
+			console.log(data);
+			$("#addButton").click(function(e) {
+				e.preventDefault();
+				console.log("button clicked");
+				$.post("http:///127.0.0.1:8080/addfriend/" + target, {}, function(data, status){
+					if(data){
+						alert("added friend");
+						$('#addButton').css("display", "none");
+						$('#delete').css("display", "block");
+						$("#delete").click(function(e) {
+							e.preventDefault();
+							console.log("button clicked");
+							$.post("http:///127.0.0.1:8080/delete/" + target, {}, function(data, status){
+								if(data){
+									alert("deleted friend");
+									$('#delete').css("display", "none");
+									$('#addButton').css("display", "block");
+								} else {
+									alert("did not delete friend");
+								}
+							});
+						});
+					} else {
+						alert("did not add friend");
+					}
+				});
+			});
+		} else if(data){
+			$('#addButton').css("display", "none");
+			$('#delete').css("display", "block");
+			$("#delete").click(function(e) {
+				e.preventDefault();
+				console.log("button clicked");
+				$.post("http:///127.0.0.1:8080/delete/" + target, {}, function(data, status){
+					if(data){
+						alert("deleted friend");
+						$('#delete').css("display", "none");
+						$('#addButton').css("display", "block");
+					} else {
+						alert("did not delete friend");
+					}
+				});
+			});
+		}
+	});
+	
+	$('form').bind("keypress", function(e) {
+		  if (e.keyCode == 13) {               
+		    e.preventDefault();
+		    return false;
+		  }
+		});
+	
+	$("#submit").click(function() {
+		$.post("http://127.0.0.1:8080/sendmessage", {
+			content: document.getElementById("content").value,
+			target: target,
+			pvt: "0"
+		}, function(data, status) {
+			//check for empty strings
+			if(document.getElementById("content").value === "") {
+					alert("No Post");				
+				}else if(data === "error") {
+				alert('Uh Oh, looks like something went wrong.');
+				} else {
+					console.log(target);
+					document.getElementById("content").value = "";
+					load_posts(target);
+				}
+			}
+		);
+	});
+}
+
+
+
+</script>
+
+</head>
+
+
+
+<body>
+
+	<div id="nav">
+	<ul>
+		<li> <a href="/profile/"> Profile </a> </li>
+		<li> <a href="/home/"> Newsfeed </a> </li>
+	</ul>
+	</div>
+
+	<div id="friendButton">
+		<button id="addButton"> add friend </button>
+		<button id="delete"> delete friend </button>
+	</div>
+	
+	<% console.log(profile) %>
+	<div class="header">
+		<h2> <%= profile.firstName + " " + profile.lastName %> </h2>
+		<p> Gender: </p>
+		<p> Email: <%= profile.email %> </p>
+		<p> Birthday: <%= profile.birthday %> </p>
+		<p> Network: <%= profile.network %> </p>
+	</div>
+//
+
+  <div id="wall">
+  	<div id="postMessage">
+  	<form action="/sendmessage/1" method="post">
+		<input type="text" class="input-border-radius" name="content" placeholder="Say Something" id="content">
+	</form>
+  	<button id="submit" type="submit"> Post </button>
+  	</div>
+  	<div id="posts">
+  	</div>
+  </div>
+    
+<a href="/logout"> logout </a>
+
+
+</body>
+</html>
+

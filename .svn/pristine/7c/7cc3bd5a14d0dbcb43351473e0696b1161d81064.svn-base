@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>PennBook</h1>
+  <h2>Create Account</h2>
+ 
+  <% if (error) { %>
+ 
+  <% if (error === 1){ %>
+  		<font color="red"> Fields cannot be left blank.</font>
+   <%}else if (error === 2) {%>
+  		<font color="red"> Passwords do not match.</font>		
+     <%}else if (error === 3){ %>
+  		<font color="red"> Account already exists.</font>
+	<%} %>
+		<%} %>
+ 
+ 
+ 
+ 
+  <form action="/createaccount" method="post">
+    <input type="text" name="email" placeholder="Email"><br>
+    <input type="password" name="password1" placeholder="Password"><br>
+    <input type="password" name="password2" placeholder="Confirm Password"><br>
+    <input type="text" name="first_name" placeholder="First Name"><br>
+    <input type="text" name="last_name" placeholder="Last Name"><br>
+    <input type="text" name="school" placeholder="School"><br>
+    <input type="date" name="birthday"><br>
+    <input type="submit" value="Sign Up">
+  </form>
+    
+</body>
+</html>

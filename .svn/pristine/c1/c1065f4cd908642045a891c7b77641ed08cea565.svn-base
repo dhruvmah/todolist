@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Welcome!</h1>
+  <form action="/checklogin" method="post">
+    <input type="text" name="username">
+    <input type="text" name="password">
+    <button> submit</button>
+  </form>
+  
+  <a href = "/signup"> Create an Account </a>
+  
+  
+  <p> Author: Dhruv Maheshwari (dhruvm)</p>
+
+  <% if (error) { %>
+ <%  if (error === 1){ %>
+  		<font color="red"> Missing username / password</font>
+   <%}else if (error === 2) {%>
+  		<font color="red"> No such user exists</font>		
+     <%}else if (error === 3){ %>
+  		<font color="red"> incorrect password </font>
+	<%} %>
+		<%} %>
+</body>
+</html>

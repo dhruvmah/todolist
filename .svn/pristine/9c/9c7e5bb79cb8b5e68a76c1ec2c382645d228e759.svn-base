@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title> Restaurant Map </title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+<link rel="stylesheet" href="http://localhost:8080/css/bootstrap.css">
+
+<style type="text/css">
+.wall-post {
+	width: 60%;
+	padding: 4px;
+	margin: 4px;
+	border: 1px solid black;
+	}
+
+#nav {
+	display: none;
+	margin-top: 0px;
+	width: 100%;
+	border: 1px solid black;
+}
+#nav li {
+	display: inline-block;
+}
+
+#wall {	
+	float:right;
+	width: 60%;
+}
+
+#post {
+	
+}
+
+.header {
+	display: none;
+	padding: 5px;
+	margin: 10px;
+	width: 60%;
+	border: 1px solid black;
+	float: right;
+}
+</style>
+
+<script type="text/javascript">
+
+
+
+
+var getProfileId = function() {
+	var url = String(window.location);
+	console.log(url);
+	var split = url.split("/");
+	console.log(split);
+	var id = split[4];
+	return id;
+};
+
+var load_posts = function(id) {
+	$.getJSON('http://127.0.0.1:8080/loadwall/' + id, function(elements){
+		var html = "";
+		for(var i=elements.length-1; i>-1; i--) {
+			console.log(elements[i]);
+			html += "<div class= \' wall-post \' >" + "<div class = \' tofrom \'>"
+			+ "At " + elements[i].timeStamp + ", <a href=\'http://127.0.0.1:8080/profile/" + elements[i].creator+ "\'>" + elements[i].creator + "</a>" +
+					" wrote: </div>" + elements[i].content + "</div>";
+		}
+		$("#posts").html(html);
+	});
+};
+
+window.onload = function() {
+	$('.header').fadeIn(1000);
+	$('#nav').fadeIn(1000);
+	
+	target = getProfileId();
+	load_posts(target);
+	$('form').bind("keypress", function(e) {
+		  if (e.keyCode == 13) {               
+		    e.preventDefault();
+		    return false;
+		  }
+		});
+	
+	$("#submit").click(function() {
+		$.post("http://127.0.0.1:8080/sendmessage", {
+			content: document.getElementById("content").value,
+			target: target,
+			pvt: "0"//
+		}, function(data, status) {
+			//check for empty strings
+			if(document.getElementById("content").value === "") {
+					alert("No Post");				
+				}else if(data === "error") {
+				alert('Uh Oh, looks like something went wrong.');
+				} else {
+					console.log(target);
+					document.getElementById("content").value = "";
+					load_posts(target);
+				}
+			}
+		);
+	});	 		
+}
+
+</script>
+
+</head>
+
+
+
+<body>
+
+	<div id="nav">
+	<ul>
+		<li> <a href="/profile/"> Profile </a> </li>
+		<li> <a href="/home/"> Newsfeed </a> </li>
+	</ul>
+	</div>
+
+	<% console.log(profile) %>
+	<div class="header">
+		<h2> <%= profile.firstName + " " + profile.lastName %> </h2>
+		<p> Gender: </p>
+		<p> Email: <%= profile.email %> </p>
+		<p> Birthday: <%= profile.birthday %> </p>
+		<p> Network: <%= profile.network %> </p>
+	</div>
+//
+
+  <div id="wall">
+  	<div id="postMessage">
+  		<form action="/sendmessage/1" method="post">
+  			<input type="text" class="input-border-radius" name="content" placeholder="Say Something" id="content">
+  		</form>
+  	<button id="submit" type="submit"> Post </button>
+  	</div>
+  	<div id="posts">
+  	</div>
+  </div>
+    
+<a href="/logout"> logout </a>
+
+
+</body>
+</html>

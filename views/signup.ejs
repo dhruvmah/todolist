@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="http://getbootstrap.com/docs-assets/ico/favicon.png">
+    
+    <!-- Bootstrap core CSS -->
+    <link href="http://getbootstrap.com/dist/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="http://getbootstrap.com/examples/signin/signin.css" rel="stylesheet">
+</head>
+<body>
+<center>
+  <h1>PennBook</h1>
+  <h2>Create Account</h2>
+ 
+  <% if (error) { %>
+ 
+  	<% if (error === 1){ %>
+  		<font color="red"> Fields cannot be left blank.</font>
+   	<%}else if (error === 2) {%>
+  		<font color="red"> Passwords do not match.</font>		
+    <%}else if (error === 3){ %>
+  		<font color="red"> Account already exists.</font>
+	<%} %>
+  <%} %>
+ 
+ 
+ 
+ <div class="signup-form" style="width:300px">
+  <form action="/createaccount" method="post">
+    <input type="email" name="email" size="20" class="form-control" placeholder="Email"><br>
+    <input type="password" name="password1" size="20" class="form-control" placeholder="Password"><br>
+    <input type="password" name="password2" size="20" class="form-control" placeholder="Confirm Password"><br>
+    <input type="text" name="first_name" size="20" class="form-control" placeholder="First Name"><br>
+    <input type="text" name="last_name" size="20" class="form-control" placeholder="Last Name"><br>
+    <input type="text" name="school" size="20" class="form-control" placeholder="School"><br>
+    <input type="date" name="birthday" class="form-control"><br>
+    <input type="submit" value="Sign Up" class="btn btn-lg btn-primary btn-block">
+  </form>
+  </div>
+  <br>
+  <br>
+  <div class="back-button" style="width:200px">
+  <form action="/" method="get">
+  Already have an account?
+  	<input type="submit" value="Login" class="btn btn-primary">
+  </form>
+  </div>
+</center>
+</body>
+</html>
