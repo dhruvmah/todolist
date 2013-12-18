@@ -27,7 +27,7 @@
 }
 
 #wall {	
-	float:right;
+	float:left;
 	width: 60%;
 }
 
@@ -49,21 +49,64 @@
 }
 
 .comments {
-	border-top: 1px solid black;
-	
+	padding-left: 15px;
+	background-color: lightgray;
+}
+
+.all_comm {
+	background-color: lightgray;
+}
+
+.search-stuff {
+	position: absolute;
+	margin-top: 47px;
+	margin-left: 407px;
+}
+
+.results {
+ 	width: 160px;
+  	padding: 4px;
+  	margin-top: 0px;
+  	border: 1px solid black;
+  	background-color: #ffffff;
+}
+
+.results:hover {
+  	background-color: #dddddd;	
+}
+
+.online {
+	margin-left:450px;
+	width: 4
+	00px;
 }
 </style>
 
 <script type="text/javascript">
 
-
+ <!-- 
+    function updateSugg() {
+      var term = document.getElementById('abc').value;
+      $.getJSON('/suggest/'+escape(term), function(elements) {
+      	if (elements.elements != undefined) {
+       		var htmlOut = "";
+        	for (var i=0; i<elements.elements.length; i++) {
+        		var id = elements.elements[i].split(',')[0];
+        		var fn = elements.elements[i].split(',')[1];
+        		var ln = elements.elements[i].split(',')[2];
+          		htmlOut += "<a href='/profile/" + id + "'><div class='results'>" +fn + ' ' + ln +"</div></a>\n";
+        	}
+       		$("#xyz").html(htmlOut);
+       } else {
+       		$("#xyz").html("");
+       }
+      });
+    } // -->
 
 
 var getProfileId = function() {
 	var url = String(window.location);
-	console.log(url);
 	var split = url.split("/");
-	console.log(split);
 	var id = split[4];
 	return id;
 };
@@ -74,10 +117,9 @@ var load_newsfeed = function(id) {
 		var commentList = [];
 		$.getJSON('/loadcomments/' + id, function(comments){
 			for (var j=comments.length-1; j>-1; j--){
-				console.log(comments[j]);
 				commentList.push(comments[j]);
-				$("#"+id).append('<p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
-						"<p> Posted at: " + comments[j].creator + "</p>" );
+				$("#"+id).append('<div class="all_comm"><p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
+						"<p class='comments' style='font-style:italic'> Posted at: " + comments[j].timeStamp + "</p></div>" );
 			}
 		callback(id, commentList);
 		});
@@ -87,11 +129,11 @@ var load_newsfeed = function(id) {
 		var html = "";
 		for(var i=0; i<elements.length; i++) {
 			//if it's a normal post:
-			if(elements[i].comment_tag != undefined) {
+			if(elements[i].comment_tag != undefined) { // changed href below from 127 to just /stuff
 					comment_tag = elements[i].comment_tag;
 					html += "<div class= \' wall-post \' >"
 								+ "<div class = \' tofrom \'>"
-									+ "At " + elements[i].timeStamp + ", <a href=\'http://127.0.0.1:8080/profile/" + 
+									+ "At " + elements[i].timeStamp + ", <a href=\'/profile/" + 
 									elements[i].creator+ "\'>" + elements[i].creator + "</a>" +
 							" wrote: </div>" +
 								'<div id="' + elements[i].comment_tag + '" >' + elements[i].content + "<br />Comments: </div>"
@@ -99,7 +141,7 @@ var load_newsfeed = function(id) {
 					get_comments(elements[i].comment_tag, function(id, commentList) {});
 				
 					html += '<form id = "' + elements[i].comment_tag + '">'+ 
-					"<input class=\"content\" type=\'text\' name=\"comment\" placeholder=\"leave a comment\" >" +
+					"<input class=\"content\" type=\'text\' name=\"comment\" placeholder=\"Leave a comment\" >" +
 					'<input class="hide" type="text" name="comment_tag" value = "' +comment_tag + '">' +
 					'<button class="postcomment" id="' + comment_tag + '"> Post Comment </button>' +
 					'</form>';
@@ -108,8 +150,6 @@ var load_newsfeed = function(id) {
 				
 					$(".postcomment").on('click', function(e) {
 						e.preventDefault();
-						console.log(event);
-						console.log("hey it clicked");
 						var content = $(this).parent().find(".content").val();
 						var tag = $(this).parent().find(".hide").val();
 						$.post("/postcomment", {
@@ -122,7 +162,6 @@ var load_newsfeed = function(id) {
 								}else if(data === "error") {
 								alert('Uh Oh, looks like something went wrong.');
 								} else {
-									console.log(target);
 									document.getElementById("content").value = "";
 									load_posts(target);
 								}
@@ -131,8 +170,8 @@ var load_newsfeed = function(id) {
 					});
 				} else {
 					html += "<div class= \' wall-post \' >"
-									+ "At " + elements[i].timeStamp + 
-									 '<a href= "profile/' + elements[i].f1 + '">' + elements[i].f1 + "</a> became friends with " +'<a 	href=" profile/' + elements[i].f2+ '">' + elements[i].f2 + "</a> </div>";
+									+ "At " + elements[i].timeStamp + ", " +
+									 '<a href= "profile/' + elements[i].f1 + '">' + elements[i].f1 + "</a>" + " became friends with " +'<a 	href=" profile/' + elements[i].f2+ '">' + elements[i].f2 + "</a> </div>";
 					$("#posts").html(html);
 			}
 		<!--closes the for loop --!>
@@ -141,12 +180,31 @@ var load_newsfeed = function(id) {
 	});
 };
 
+$.get('/gethome', function(e) {
+	res.redirect(e);
+})
+
+$.get('/getprofile2/', function(e) {
+	res.redirect(e);
+})
+
 window.onload = function() {
 	$('.header').fadeIn(1000);
 	$('#nav').fadeIn(1000);
 	
 	target = getProfileId();
 	load_newsfeed(target);
+
+	$.get("/getonline", function(e) {
+		console.log("Meow meow");
+		console.log("Meow size: " + e.length);
+		for (var i = 0; i < e.length; i++) {
+			console.log(e[i]);
+		}
+
+		$('#test').html("Hello world");
+
+	})
 		
 	$('form').bind("keypress", function(e) {
 		  if (e.keyCode == 13) {               
@@ -167,7 +225,6 @@ window.onload = function() {
 				}else if(data === "error") {
 				alert('Uh Oh, looks like something went wrong.');
 				} else {
-					console.log(target);
 					document.getElementById("content").value = "";
 					load_posts(target);
 				}
@@ -186,32 +243,56 @@ window.onload = function() {
 
 <body>
 
-	<div id="nav">
-	<ul>
-		<li> <a href="/profile/"> Profile </a> </li>
-		<li> <a href="/home/"> Newsfeed </a> </li>
-	</ul>
-	</div>
+	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">PennBook</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active newsfeed"><a href="/gethome/">Home</a></li>
+            <li><a href="/getprofile2/">My Profile</a></li>
+            <li><a href="/logout/">Logout</a></li>
+            <li><div class="container" style="width:130px">
+    			<form action="" method="" onSubmit="return false">
+      			<input type="text" name="thetext" style="margin-top:13px" id="abc" onKeyUp="updateSugg()"><br>
+    			</form>
+			</div></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="search-stuff" id="xyz"></div>
 
-	<div id="friendButton">
-		<button id="addButton"> add friend </button>
-		<button id="delete"> delete friend </button>
-	</div>
-	
-	
+	<div class="friend_suggest"> </div>
 
+<br>
+<br>
+<br>
+<br>
   <div id="wall">
   	<div id="postMessage">
   	<form action="/sendmessage/1" method="post">
-		<input type="text" class="input-border-radius" name="content" placeholder="Say Something" id="content">
+		<input type="text" class="input-border-radius" name="content" placeholder="Say Something!" id="content">
 	</form>
   	<button id="submit" type="submit"> Post </button>
   	</div>
   	<div id="posts">
   	</div>
   </div>
-    
-<a href="/logout"> logout </a>
+
+  <div id="onlinefriends">
+  	<div class="online" id="test"></div>
+  </div>
+
+  <div class="online" id="test">
+  </div>
 
 
 </body>

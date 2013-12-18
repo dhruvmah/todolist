@@ -32,7 +32,7 @@ var checkLogin = function(req, res) {
 							if (err) {
 								res.send(err);
 							} else {
-								res.redirect("/profile/" + req.session.username);
+								res.redirect("/home/" + req.session.username);
 								res.send({id: req.session.username});
 							}
 						});
@@ -71,13 +71,12 @@ var createAccount = function(req, res) {
 				res.render("signup.ejs", {error : err.value});
 			} else {
 				req.session.logged = true;
-				console.log(data);
 				req.session.username = data;
 				db.toggleOnline(data, 'yes', function(err, data) {
 					if (err) {
 						res.send(err);
 					} else {
-						res.redirect("/profile/" + req.session.username);
+						res.redirect("/home/" + req.session.username);
 					}
 				});
 			}
@@ -88,13 +87,11 @@ var createAccount = function(req, res) {
 //gets profile information
 var getProfile = function(req, res){
 	var id = req.params.id;
-	console.log(id);
 	db.getProfile(id, function(err, data) {
 		if (err) {
 			console.log(err);
 			res.render("error.ejs");
 		} else if (data) {
-				console.log(data);
 				profile = {};
 				for( j=0; j<data.length; j++) {
 					if(data[j].Name == "email") {
@@ -129,7 +126,6 @@ var getProfile = function(req, res){
 
 //sets posts (ie. statuses or wall posts)
 var sendMessage = function(req, res) {
-	console.log("routes reached");
 	
 	if(req.session.username === req.body.target) {
 		var type = "1";
@@ -143,7 +139,6 @@ var sendMessage = function(req, res) {
 	//only difference between them is the creator and privacy
 	
 	var content = String(req.body.content);
-	console.log(req.session.username);
 	var creator = String(req.session.username);
 	var target = String(target);
 	var timeStamp = String(new Date() / 1000);
@@ -168,11 +163,8 @@ var sendMessage = function(req, res) {
 
 //posts comment on a post
 var postComment = function(req, res) {
-	console.log("routes post comment reached");
 	var content = String(req.body.content);
 	var tag = String(req.body.tag);
-	console.log(content);
-	console.log(tag);
 	var creator = String(req.session.username);
 	var timeStamp = String(new Date() / 1000);
 	if (content === "") {
@@ -194,20 +186,16 @@ var loadHome = function(req, res){
 	var id = req.params.id;
 	var friend_ids = [];
 	friend_ids.push(req.session.username);
-	console.log('reached load home in routes');
 	var messages = []
 	 async.series([
         //Load user to get userId first
         function(callback) {
-        	console.log("1");
             db.getFriends(id, function(err, data) {
                 if (err){ return callback(err)
                 }
                 //Check that a user was found
                 else if (data) {
-                	console.log(data);
                 	for(var i=0; i<data[0].length; i++){
-						console.log(data[0][i].Attributes[0].Value);
 						friend_ids.push(data[0][i].Attributes[0].Value);
 	             	}
                 callback();
@@ -216,11 +204,8 @@ var loadHome = function(req, res){
         },
         //Load posts (won't be called before task 1's "task callback" has been called)
         function(callback) {
-	       		console.log("okay this all works");
-        		console.log(friend_ids);
         		loadFriendshipPostings(friend_ids, function(err, data){
         			if(err) return callback(err);
-        			console.log(data);
         			for(var i=0; i<data.length; i++){
 						 messages.push(data[i]);
         			}
@@ -228,11 +213,8 @@ var loadHome = function(req, res){
         		})
         },
         function(callback) {
-	       		console.log("okay this all works");
-        		console.log(friend_ids);
         		loadPostsWithUserIds(friend_ids, function(err, data){
         			if(err) return callback(err);
-        			console.log(data);
         			for(var i=0; i<data.length; i++){
 						 messages.push(data[i]);
         			}
@@ -241,11 +223,9 @@ var loadHome = function(req, res){
         }
 
     ], function(err) { //This function gets called after the two tasks have called their "task callbacks"
-        console.log("done with everything, now lets do shit");
         messages.sort(function(a,b) {
         	return b.timeStamp-a.timeStamp
         });
-        console.log(messages);
         res.send(JSON.stringify(messages));
    	});
 };
@@ -255,9 +235,7 @@ function loadPostsWithUserIds(friend_ids, callback) {
 	async.forEach(friend_ids, function(friend_id, callback) {
             db.loadAllPosts(friend_id, function(err, data){
             	if(data) {
-            		console.log("in the .foreach loop:");
             		if(data.Items != undefined){
-						console.log(data.Items.length);
 						for(var i = 0; i<data.Items.length; i++) {
 							    var nextPost = {};
 								for(var j=0; j<data.Items[i].Attributes.length; j++){
@@ -297,10 +275,8 @@ function loadFriendshipPostings(friend_ids, callback) {
 	async.forEach(friend_ids, function(friend_id, callback) {
             db.loadFriendShipPostings(friend_id, function(err, data){
             	if(data) {
-            		console.log("in the friends loop:");
             		friendShip = {};
             		if(data.Items != undefined){
-						console.log(data.Items.length);
 						for(var i = 0; i<data.Items.length; i++) {
 								for(var j=0; j<data.Items[i].Attributes.length; j++){
 								 	if(data.Items[i].Attributes[j].Name == "f1") {
@@ -311,8 +287,6 @@ function loadFriendshipPostings(friend_ids, callback) {
 										var timeStamp = data.Items[i].Attributes[j].Value;
 									}
 								}
-								console.log(f1);
-								console.log(f2);
 								if(parseInt(f1) > parseInt(f2)) {
 									friendShip.f1 = f1;
 									friendShip.f2 = f2;
@@ -340,8 +314,6 @@ function loadFriendshipPostings(friend_ids, callback) {
 //fetches wall posts for a profile page
 var loadWall = function(req, res) {
 	var id = req.params.id;
-	console.log(id);
-	console.log("reached load Wall");
 	db.loadWall(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
@@ -375,7 +347,6 @@ var loadWall = function(req, res) {
 				nextPost.target = target;
 				posts.push(nextPost);
 				}
-			console.log(JSON.stringify(posts));
 			res.send(JSON.stringify(posts));			
 		}
 	}
@@ -384,7 +355,6 @@ var loadWall = function(req, res) {
 
 var addFriend = function(req, res){
 	var friendTwo = req.params.id;
-	console.log("adding" + friendTwo + " in routes");
 	var friendOne = req.session.username;
 	var timeStamp = String(new Date() / 1000);
 	db.addFriend(friendOne, friendTwo, timeStamp, function(err, data){
@@ -399,7 +369,6 @@ var addFriend = function(req, res){
 
 var deleteFriend = function(req, res){
 	var friendTwo = req.params.id;
-	console.log("deleting" + friendTwo + " in routes");
 	var friendOne = req.session.username;
 	db.deleteFriend(friendOne, friendTwo, function(err, data){
 		if(err) {
@@ -414,13 +383,10 @@ var checkFriend = function(req, res) {
 	
 	var friendOne = req.session.username;
 	var friendTwo = req.params.id;
-	console.log("routes check Friend reached with friendOne =" + friendOne + "and friendTwo" + friendTwo);
 	db.checkFriend(friendOne,friendTwo, function(err, data){
 		if(err) {
 			res.send("error");
 		} else if(data.Items === undefined){
-			console.log(data);
-			console.log("not friends in routes");
 			res.send(false)
 		} else {
 			res.send(true);
@@ -431,16 +397,12 @@ var checkFriend = function(req, res) {
 //fetches comments
 var loadComment = function(req, res) {
 	var id = req.params.id;
-	console.log('reached routes with' + id);
 	db.loadComment(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
 		} else if(data) {
-			console.log("received data from db;");
-			console.log(data);
 			comments = [];
 			if(data.Items !== undefined) {
-				console.log(data.Items);
 				for(i=0; i<data.Items.length; i++){
 					nextComment = new Object();
 					var name = data.Items[i].Name;
@@ -463,9 +425,6 @@ var loadComment = function(req, res) {
 					nextComment.post_tag = post_tag;
 					nextComment.creator = creator;
 					comments.push(nextComment);
-					console.log("next comment");
-
-					console.log(nextComment);
 					}
 			}
 			res.send(JSON.stringify(comments));			
@@ -480,9 +439,7 @@ var searchSuggest = function(req, res) {
 			res.send("error during add");
 		} else if (data.Items != undefined) {
 			var arr = new Array();
-			console.log(data.Items[0].Attributes.length);
 			for (var i = 0; i < data.Items.length; i++) {
-				console.log(data.Items[i].Attributes[0].Value);
 				arr[i] = data.Items[i].Name + ',' + data.Items[i].Attributes[0].Value + ',' + data.Items[i].Attributes[1].Value;
 			}
 			res.send('search.ejs', {error:null, elements:arr});
@@ -514,6 +471,73 @@ var getHome = function(req, res) {
 	res.render('homepage.ejs', {error:null});
 }
 
+var getHome2 = function(req, res) {
+	res.redirect('/home/' + req.session.username);
+}
+
+var getOnline = function(req, res) {
+	db.getOn(req.session.username, function(err, data) {
+		if (err) {
+			res.send(err);
+		} else if (data.Items != undefined) {
+			var j = 0;
+			var returned = new Array();
+			for (var i = 0; i < data.Items.length; i++) {
+				console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+				console.log(data.Items[i].Name);
+				var friendTwo = data.Items[i].Name;
+				var friendOne = req.session.username;
+				var isFriends = false;
+				var tmp = {};
+				tmp.Value = i;
+				console.log("1: " + i);
+				db.checkFriend(friendOne,friendTwo, function(err2, data2){
+					if(err2) {
+						console.log("1");
+						res.send("error");
+					} else if(data2.Items === undefined){
+						console.log("2");
+					} else {
+						console.log("3");
+						isFriends = true;
+						console.log("2: " + tmp.Value);
+					}
+				});
+				if (isFriends) {
+					console.log(data.Items[i]);
+					returned[j] = (data.Items[i]);
+					j++;
+				}
+			}
+			console.log("Returned: ");
+			console.log(returned);
+			res.send(returned);
+		} else {
+			res.send(null);
+		}
+	})
+}
+
+var getName = function(req, res) {
+	var id = req.session.username;
+	db.getProfile(id, function (err, data) {
+		if (err) {
+			res.send(err);
+		} else if (data.Items != undefined) {
+			//do shit
+			console.log("-------+++++++++++++++++++++++------------");
+			console.log(data.Items);
+		} else {
+			res.send(null);
+		}
+	});
+}
+
+var getProfile2 = function(req, res) {
+	//res.redirect('/profile/' + req.session.username);
+	res.send();
+}
+
 
 var routes = { 
   get_main: getMain,
@@ -532,7 +556,11 @@ var routes = {
   delete_friend: deleteFriend,
   search_help: searchSuggest,
   get_search: search,
-  get_home: getHome
+  get_home: getHome,
+  get_home2: getHome2,
+  get_online: getOnline,
+  get_name: getName,
+  get_profile2: getProfile2
 };
 
 module.exports = routes;

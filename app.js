@@ -47,6 +47,10 @@ app.post('/delete/:id', routes.delete_friend);
 app.get('/checkfriend/:id', routes.check_friend);
 app.get('/suggest/:term', routes.search_help);
 app.get('/search', routes.get_search);
+app.get('/getonline', routes.get_online);
+app.get('/gethome/', routes.get_home2);
+app.get('/findname/', routes.get_name);
+app.get('/getprofile/', routes.get_profile);
 /* Run the server */
 
 console.log('Authors: Dhruv Maheshwari (dhruvm) & Corey Loman (loman)');

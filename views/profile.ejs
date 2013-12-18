@@ -46,14 +46,19 @@
 }
 
 .comments {
-	border-top: 1px solid black;
+	padding-left: 15px;
+	background-color: lightgray;
+}
+
+.all_comm {
+	background-color: lightgray;
 }
 
 .results {
  	width: 160px;
   	padding: 4px;
   	margin-top: 0px;
-  	border: 1px solid black;
+  	border-bottom: 1px solid black;
   	background-color: #ffffff;
 }
 
@@ -85,9 +90,7 @@
 
 var getProfileId = function() {
 	var url = String(window.location);
-	console.log(url);
 	var split = url.split("/");
-	console.log(split);
 	var id = split[4];
 	return id;
 };
@@ -97,10 +100,13 @@ var load_posts = function(id) {
 		var commentList = [];
 		$.getJSON('/loadcomments/' + id, function(comments){
 			for (var j=0; j<comments.length; j++){
-				console.log(comments[j]);
 				commentList.push(comments[j]);
-				$("#"+id).append('<p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
-						"<p> Posted at: " + comments[j].creator + "</p>" );
+				var fullname = "";
+				$.get("/findName/", function(e) {
+					fullname = e.data;
+				})
+				$("#"+id).append('<div class="all_comm"><p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
+						"<p class='comments' style='font-style:italic'> Posted at: " + comments[j].timeStamp + "</p></div>" );
 			}
 		callback(id, commentList);
 		});
@@ -110,7 +116,6 @@ var load_posts = function(id) {
 		var html = "";
 		for(var i=elements.length-1; i>-1; i--) {
 			comment_tag = elements[i].comment_tag;
-			console.log(comment_tag);
 			html += "<div class= \' wall-post \' >"
 						+ "<div class = \' tofrom \'>"
 							+ "At " + elements[i].timeStamp + ", <a href=\'/profile/" + 
@@ -132,8 +137,6 @@ var load_posts = function(id) {
 			
 			$(".postcomment").on('click', function(e) {
 				e.preventDefault();
-				console.log(event);
-				console.log("hey it clicked");
 				var content = $(this).parent().find(".content").val();
 				var tag = $(this).parent().find(".hide").val();
 				$.post("/postcomment", {
@@ -146,7 +149,6 @@ var load_posts = function(id) {
 						}else if(data === "error") {
 						alert('Uh Oh, looks like something went wrong.');
 						} else {
-							console.log(target);
 							document.getElementById("content").value = "";
 							load_posts(target);
 						}
@@ -158,22 +160,26 @@ var load_posts = function(id) {
 	});
 };
 
+$.get('/gethome', function(e) {
+	res.redirect(e);
+})
+
+$.get('/getprofile2', function(e) {
+	res.redirect(e);
+})
+
 window.onload = function() {
 	$('.header').fadeIn(1000);
 	$('#nav').fadeIn(1000);
 
-	$('newsfeed').html('<a href ="/home/' + getProfileId() + ' ">Home </a>');
-	$('')
-	
 	target = getProfileId();
 	load_posts(target);
+	$('#').html('/logout');
 	
 	$.get("/checkfriend/" + target, {}, function(data, status){
 		if(!data){
-			console.log(data);
 			$("#addButton").click(function(e) {
 				e.preventDefault();
-				console.log("button clicked");
 				$.post("/addfriend/" + target, {}, function(data, status){
 					if(data){
 						alert("added friend");
@@ -181,7 +187,6 @@ window.onload = function() {
 						$('#delete').css("display", "block");
 						$("#delete").click(function(e) {
 							e.preventDefault();
-							console.log("button clicked");
 							$.post("/delete/" + target, {}, function(data, status){
 								if(data){
 									alert("deleted friend");
@@ -202,7 +207,6 @@ window.onload = function() {
 			$('#delete').css("display", "block");
 			$("#delete").click(function(e) {
 				e.preventDefault();
-				console.log("button clicked");
 				$.post("/delete/" + target, {}, function(data, status){
 					if(data){
 						alert("deleted friend");
@@ -235,7 +239,6 @@ window.onload = function() {
 				}else if(data === "error") {
 				alert('Uh Oh, looks like something went wrong.');
 				} else {
-					console.log(target);
 					document.getElementById("content").value = "";
 					load_posts(target);
 				}
@@ -267,8 +270,8 @@ window.onload = function() {
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active newsfeed"></li>
-            <li><a href="/profile/" + getProfileId()>NewsFeed</a></li>
+            <li class="active newsfeed"><a href="/gethome/">Home</a></li>
+            <li><a href="/getprofile2/">My Profile</a></li>
             <li><a href="/logout/">Logout</a></li>
             <li><div class="container" style="width:130px">
     			<form action="" method="" onSubmit="return false">
@@ -284,21 +287,11 @@ window.onload = function() {
 <br>
 <br>
 <br>
-<!--
-	<div class="jumbotron" style="width: 800px">
-        <h2> <%= profile.firstName + " " + profile.lastName %> </h2>
-        <p> Gender: <%= profile.gender %></p>
-		<p> Email: <%= profile.email %> </p>
-		<p> Birthday: <%= profile.birthday %> </p>
-		<p> Network: <%= profile.network %> </p>
-		<p> Interests: <%= profile.interests %> </p>
-    </div> -->
 	<div id="friendButton">
 		<button id="addButton" class="sample btn custom large h" data-h="0" data-s="0" data-l="26", data-p="10">Add as friend</button>
 		<button id="delete" class="sample btn custom large h" data-h="0" data-s="0" data-l="26", data-p="10">Unfriend</button>
 	</div>
 	
-	<% console.log(profile) %>
 	<div class="header">
 		<h2> <%= profile.firstName + " " + profile.lastName %> </h2>
 		<p> Gender: <%= profile.gender %></p>

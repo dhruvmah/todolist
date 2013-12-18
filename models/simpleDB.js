@@ -66,7 +66,6 @@ var myDB_login = function(user_id, password, route_callbck){
 
 //adds restaurant to the database
 var myDB_sendMessage = function(content, creator, target, pvt, timeStamp, route_callbck){
-	console.log("DB reached");
 	if(content === "" || creator  === "" || target === "" || pvt === "" || timeStamp === "") {
 		//missing a parameter
 		var results = {};
@@ -88,7 +87,6 @@ var myDB_sendMessage = function(content, creator, target, pvt, timeStamp, route_
 							console.log(err2);
 							route_callbck(err2, null);
 						} else if (data2) {
-							console.log(data2);
 							results = {};
 							results.added = true;
 							route_callbck(null, results);
@@ -99,7 +97,6 @@ var myDB_sendMessage = function(content, creator, target, pvt, timeStamp, route_
 
 //adds restaurant to the database
 var myDB_postComment = function(content, creator, tag, timeStamp, route_callbck){
-//	console.log("DB post comment reached");
 	if(content === "" || creator  === "" || timeStamp === "" || tag === "") {
 		//missing a parameter
 		var results = {};
@@ -114,10 +111,8 @@ var myDB_postComment = function(content, creator, tag, timeStamp, route_callbck)
 					,{Name:"post_tag", Value: String(tag)}]},
 					function(err2, data2){
 						if(err2) {
-							console.log(err2);
 							route_callbck(err2, null);
 						} else if (data2) {
-					//		console.log(data2);
 							results = {};
 							results.added = true;
 							route_callbck(null, results);
@@ -129,11 +124,9 @@ var myDB_postComment = function(content, creator, tag, timeStamp, route_callbck)
 //This function gets a single user's profile info
 var myDB_getProfile = function(id, route_callbck){
 	//might need to do a string escape kind of thing in the select expression
-	console.log("db profile search");
 	simpledb.select({SelectExpression: "select * from users where itemName() = \'" + String(id) + "\'"},
 		  function (err, data) {
     if (err) {
-    	console.log(err);
     	route_callbck("Lookup error: "+err, null);
     } else {
     	route_callbck(null, data["Items"][0]["Attributes"]);     
@@ -182,15 +175,11 @@ var myDB_loadAllPosts = function(id, route_callbck){
 };
 
 var myDB_loadComments = function(id, route_callbck){
-	  console.log(id);
 	  simpledb.select({SelectExpression: "select * from commentlist where post_tag = \'" + String(id) + "\'", ConsistentRead: true
 		  }, function (err, data) {
 	    if (err) {
 	      route_callbck("Lookup error: "+err, null);
 	    } else {
-	    	console.log("comment data");
-	    	console.log(data);
-
 	      route_callbck(null, data);
 	    }
 	  });
@@ -249,7 +238,6 @@ var myDB_addFriend = function(friendOne, friendTwo, timeStamp, route_callbck){
 		var f1 = friendTwo;
 		var f2 = friendOne;
 	}
-	console.log(itemName + f1 + f2 + timeStamp);
 	simpledb.putAttributes({DomainName:'friendships', ItemName:(itemName),
 		Attributes:[{Name:"f1", Value: f1}, {Name:"f2", Value: f2}, {Name: "timeStamp", Value: timeStamp}]},
 		function(err, data){
@@ -267,15 +255,11 @@ var myDB_addFriend = function(friendOne, friendTwo, timeStamp, route_callbck){
 };
 
 var myDB_deleteFriend = function(friendOne, friendTwo, route_callbck){
-	console.log( friendOne + "is db deleteing from" + friendTwo);
-	console.log(typeof(parseInt(friendOne)));
-	console.log(typeof(parseInt(friendTwo)));
 	if(parseInt(friendOne) > parseInt(friendTwo)){
 		var itemName = friendOne + "," + friendTwo;
 	} else {
 		var itemName = friendTwo + "," + friendOne;
 	}
-	console.log(itemName);
 	simpledb.deleteAttributes({DomainName:'friendships', ItemName:itemName},
 		function(err, data){
 			if(err) {
@@ -292,7 +276,6 @@ var myDB_deleteFriend = function(friendOne, friendTwo, route_callbck){
 };
 
 var myDB_checkFriendship = function(friendOne, friendTwo, route_callbck) {
-	console.log("db check Friend reached with friendOne =" + friendOne + "and friendTwo" + friendTwo);
 	  simpledb.select({SelectExpression: "select * from friendships where itemName() = \'"
 		  + friendOne + "," + friendTwo + "\'" + "OR itemName() = \'"
 		  + friendTwo + "," + friendOne + "\'", ConsistentRead: true}, function(err, data) {
@@ -300,18 +283,14 @@ var myDB_checkFriendship = function(friendOne, friendTwo, route_callbck) {
 					console.log(err);
 					route_callbck(err, null);
 			  } else if (data.size === 2) {	
-						console.log("checkFriendship: data = 2" + data);
 				  		route_callbck(null, true);
 					} else {
-						console.log("checkFriendship in db:")
-						console.log(data);
 						route_callbck(null, data);
 					}  
 		});
 };
 
 var myDB_findUsers = function(term, route_callbck) {
-	console.log("db finding users that start with: " + term);
 	var query = "select first_name, last_name from users where first_name like '" + term + "%'";
 	simpledb.select({SelectExpression: query, ConsistentRead: true}, function(err, data) {
 		if (err) {
@@ -330,18 +309,27 @@ var myDB_toggle = function(id, bool, route_callbck) {
 	else var tog = 'yes';
 	simpledb.deleteAttributes({DomainName: 'users', ItemName: id, Attributes:[{'Name': 'online', 'Value': tog}]}, function(err, data) {
 		if (err) {
-			console.log("1");
 			route_callbck(err, null);
 		} else {
 			simpledb.putAttributes({DomainName: 'users', ItemName: id, Attributes:[{'Name': 'online', 'Value': bool}]}, function(err2, data2) {
 				if (err2) {
-					console.log("2");
 					route_callbck(err2, null);
 				} else {
-					console.log("3");
 					route_callbck(null, null);
 				}
 			});
+		}
+	});
+}
+
+var myDB_online = function(id, route_callbck) {
+	simpledb.select({SelectExpression: "select first_name, last_name from users where online='yes'", ConsistentRead: true}, function(err, data) {
+		if (err) {
+			route_callbck(err, null);
+		} else if (data) {
+			route_callbck(null, data);
+		} else {
+			route_callbck(null, null);
 		}
 	});
 }
@@ -366,7 +354,8 @@ var database = {
   loadAllPosts: myDB_loadAllPosts,
   loadFriendShipPostings: myDB_getFriends2,
   findUsers: myDB_findUsers,
-  toggleOnline: myDB_toggle
+  toggleOnline: myDB_toggle,
+  getOn: myDB_online
 };
                                         
 module.exports = database;
