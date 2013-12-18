@@ -63,7 +63,7 @@ var createAccount = function(req, res) {
 			} else {
 				req.session.logged = true;
 				console.log(data);
-				req.session.username = data;
+				req.session.username = data.Attributes[0].Value;
 				res.redirect("/profile/76705186394974");
 			}
 		});
@@ -237,7 +237,11 @@ var loadWall = function(req, res) {
 	db.loadWall(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
+<<<<<<< HEAD
 		} else if(data != undefined) {
+=======
+		} else if(data) {
+>>>>>>> parent of ebcd4c2... search suggestions & signup
 			posts = [];
 			for(i=0; i<data.Items.length; i++){
 				nextPost = new Object();
