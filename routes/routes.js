@@ -51,13 +51,15 @@ var createAccount = function(req, res) {
 	var last_name = req.body.last_name;
 	var school = req.body.school;
 	var birthday = req.body.birthday;
+	var gender = req.body.gender;
+	var interests = req.body.interests;
 	if (email === "" || password1 === "" || password2 === ""
 			|| first_name === "" || last_name === "" || school === "") {
 		res.render("signup.ejs", {error : 1});
 	} else if (password1 != password2) {
 		res.render("signup.ejs", {error : 2});
 	} else {
-		db.createAccount(email, password1, first_name, last_name, school, birthday, function(err, data) {
+		db.createAccount(email, password1, first_name, last_name, school, birthday, gender, interests, function(err, data) {
 			if (err) {
 				res.render("signup.ejs", {error : err.value});
 			} else {
@@ -92,6 +94,10 @@ var getProfile = function(req, res){
 						var firstName = data[j].Value;
 					} else if(data[j].Name=="last_name") {
 						var lastName = data[j].Value;
+					} else if(data[j].Name=="gender") {
+						var gender = data[j].Value;
+					} else if(data[j].Name=="interests") {
+						var interests = data[j].Value;
 					}
 				}
 				profile.firstName = firstName;
@@ -100,6 +106,8 @@ var getProfile = function(req, res){
 				profile.network = network;
 				profile.email = email;
 				profile.id = id;
+				profile.gender = gender;
+				profile.interests = interests;
 				
 				res.render("profile.ejs", {profile : profile});
 		}
@@ -236,7 +244,7 @@ var loadWall = function(req, res) {
 	db.loadWall(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
-		} else if(data) {
+		} else if(data.Items != undefined) {
 			posts = [];
 			if(data.Items != undefined){
 			for(i=0; i<data.Items.length; i++){
@@ -358,6 +366,24 @@ var loadComment = function(req, res) {
 	});
 }; 
 
+var searchSuggest = function(req, res) {
+	var term = req.params.term;
+	db.findUsers(term, function(err, data) {
+		if (err) {
+			res.send("error during add");
+		} else if (data.Items != undefined) {
+			var arr = new Array();
+			console.log(data.Items[0].Attributes.length);
+			for (var i = 0; i < data.Items.length; i++) {
+				console.log(data.Items[i].Attributes[0].Value);
+				arr[i] = data.Items[i].Name + ',' + data.Items[i].Attributes[0].Value + ',' + data.Items[i].Attributes[1].Value;
+			}
+			res.send('search.ejs', {error:null, elements:arr});
+		} else {
+			res.send('search.ejs', {error:null, elements:null});
+		}
+	})
+}
 
 
 //after logout button is pressed
@@ -365,6 +391,10 @@ var logout = function(req, res) {
 	req.session.logged = false;
 	res.redirect('/');
 };
+
+var search = function(req, res) {
+	res.render('search.ejs', {error:null});
+}
 
 
 var routes = { 
@@ -381,7 +411,9 @@ var routes = {
   load_comments:loadComment,
   add_friend: addFriend,
   check_friend: checkFriend,
-  delete_friend: deleteFriend
+  delete_friend: deleteFriend,
+  search_help: searchSuggest,
+  get_search: search
 };
 
 module.exports = routes;

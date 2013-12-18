@@ -240,10 +240,11 @@ window.onload = function() {
 	<% console.log(profile) %>
 	<div class="header">
 		<h2> <%= profile.firstName + " " + profile.lastName %> </h2>
-		<p> Gender: </p>
+		<p> Gender: <%= profile.gender %></p>
 		<p> Email: <%= profile.email %> </p>
 		<p> Birthday: <%= profile.birthday %> </p>
 		<p> Network: <%= profile.network %> </p>
+		<p> Interests: <%= profile.interests %> </p>
 	</div>
 //
 

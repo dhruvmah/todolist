@@ -15,7 +15,7 @@ var myDB_restaurants = function(route_callbck){
 };
 
 // creates a new account in the db
-var myDB_createAccount = function(email, password, first_name, last_name, school, birthday, route_callbck){
+var myDB_createAccount = function(email, password, first_name, last_name, school, birthday, gender, interests, route_callbck){
 	var error = {};
 	simpledb.getAttributes({DomainName: 'emailID', ItemName: email}, function(err1, data1) {
 		if (err1) { //no users were found
@@ -25,7 +25,7 @@ var myDB_createAccount = function(email, password, first_name, last_name, school
 			// add the user with the new userID
 			var random_id = Math.floor(Math.random()*1000000000000000); // 10^15
 			var random_string = random_id + "";
-			simpledb.putAttributes({DomainName: 'users', ItemName: random_string, Attributes: [{'Name': 'email', 'Value': email},{'Name': 'password', 'Value': password}, {'Name': 'first_name', 'Value': first_name}, {'Name': 'last_name', 'Value': last_name}, {'Name': 'birthday', 'Value': birthday}, {'Name': 'network', 'Value': school}]}, function(err2, data2) {
+			simpledb.putAttributes({DomainName: 'users', ItemName: random_string, Attributes: [{'Name': 'email', 'Value': email},{'Name': 'password', 'Value': password}, {'Name': 'first_name', 'Value': first_name}, {'Name': 'last_name', 'Value': last_name}, {'Name': 'birthday', 'Value': birthday}, {'Name': 'network', 'Value': school}, {'Name': 'gender', 'Value': gender}, {'Name': 'interests', 'Value': interests}]}, function(err2, data2) {
 				if (err2) {
 					route_callbck("Database add error: " + err2, null);
 				} else {
@@ -301,8 +301,25 @@ var myDB_checkFriendship = function(friendOne, friendTwo, route_callbck) {
 						console.log(data);
 						route_callbck(null, data);
 					}  
-			 });
-	 };
+		});
+};
+
+var myDB_findUsers = function(term, route_callbck) {
+	console.log("db finding users that start with: " + term);
+	var query = "select first_name, last_name from users where first_name like '" + term + "%'";
+	simpledb.select({SelectExpression: query, ConsistentRead: true}, function(err, data) {
+		if (err) {
+			console.log(err);
+			route_callbck(err, null);
+		} else if (data) {
+			route_callbck(null, data);
+		} else {
+			route_callbck(null, null);
+		}
+	})
+}
+
+
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
@@ -321,7 +338,8 @@ var database = {
   checkFriend: myDB_checkFriendship,
   deleteFriend: myDB_deleteFriend,
   getFriends: myDB_getFriends,
-  loadAllPosts: myDB_loadAllPosts
+  loadAllPosts: myDB_loadAllPosts,
+  findUsers: myDB_findUsers
 };
                                         
 module.exports = database;
