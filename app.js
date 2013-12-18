@@ -43,6 +43,8 @@ app.post('/sendmessage', routes.send_message);
 app.post('/addfriend/:id', routes.add_friend);
 app.post('/delete/:id', routes.delete_friend);
 app.get('/checkfriend/:id', routes.check_friend);
+app.get('/suggest/:term', routes.search_help);
+app.get('/search', routes.get_search);
 /* Run the server */
 
 console.log('Authors: Dhruv Maheshwari (dhruvm) & Corey Loman (loman)');
