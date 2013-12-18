@@ -430,12 +430,16 @@ var checkFriend = function(req, res) {
 //fetches comments
 var loadComment = function(req, res) {
 	var id = req.params.id;
+	console.log('reached routes with' + id);
 	db.loadComment(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
 		} else if(data) {
+			console.log("received data from db;");
+			console.log(data);
 			comments = [];
 			if(data.Items !== undefined) {
+				console.log(data.Items);
 				for(i=0; i<data.Items.length; i++){
 					nextComment = new Object();
 					var name = data.Items[i].Name;
@@ -458,7 +462,9 @@ var loadComment = function(req, res) {
 					nextComment.post_tag = post_tag;
 					nextComment.creator = creator;
 					comments.push(nextComment);
-					
+					console.log("next comment");
+
+					console.log(nextComment);
 					}
 			}
 			res.send(JSON.stringify(comments));			

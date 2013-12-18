@@ -183,7 +183,7 @@ var myDB_loadAllPosts = function(id, route_callbck){
 
 var myDB_loadComments = function(id, route_callbck){
 	  console.log(id);
-	  simpledb.select({SelectExpression: "select * from messages where post_tag = \'" + String(id) + "\'", ConsistentRead: true
+	  simpledb.select({SelectExpression: "select * from commentlist where post_tag = \'" + String(id) + "\'", ConsistentRead: true
 		  }, function (err, data) {
 	    if (err) {
 	      route_callbck("Lookup error: "+err, null);
@@ -365,7 +365,6 @@ var database = {
   getFriends: myDB_getFriends,
   loadAllPosts: myDB_loadAllPosts,
   loadFriendShipPostings: myDB_getFriends2,
-  findUsers: myDB_findUsers
   findUsers: myDB_findUsers,
   toggleOnline: myDB_toggle
 };
