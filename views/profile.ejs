@@ -70,8 +70,12 @@ var getProfileId = function() {
 var load_posts = function(id) {
 	var get_comments = function (id, callback){ 
 		var commentList = [];
+		console.log("right before get json");
 		$.getJSON('/loadcomments/' + id, function(comments){
+			console.log('after json');
+				console.log(comments.length)
 			for (var j=comments.length-1; j>-1; j--){
+				console.log(comments.length)
 				console.log(comments[j]);
 				commentList.push(comments[j]);
 				$("#"+id).append('<p class="comments">' + comments[j].creator + ": "+ comments[j].content + "</p> " +
@@ -122,6 +126,7 @@ var load_posts = function(id) {
 						} else {
 							console.log(target);
 							document.getElementById("content").value = "";
+							console.log("posted, about to re-load posts");
 							load_posts(target);
 						}
 					}

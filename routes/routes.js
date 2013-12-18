@@ -51,15 +51,13 @@ var createAccount = function(req, res) {
 	var last_name = req.body.last_name;
 	var school = req.body.school;
 	var birthday = req.body.birthday;
-	var gender = req.body.gender;
-	var interests = req.body.interests;
 	if (email === "" || password1 === "" || password2 === ""
 			|| first_name === "" || last_name === "" || school === "") {
 		res.render("signup.ejs", {error : 1});
 	} else if (password1 != password2) {
 		res.render("signup.ejs", {error : 2});
 	} else {
-		db.createAccount(email, password1, first_name, last_name, school, birthday, gender, interests, function(err, data) {
+		db.createAccount(email, password1, first_name, last_name, school, birthday, function(err, data) {
 			if (err) {
 				res.render("signup.ejs", {error : err.value});
 			} else {
@@ -94,10 +92,6 @@ var getProfile = function(req, res){
 						var firstName = data[j].Value;
 					} else if(data[j].Name=="last_name") {
 						var lastName = data[j].Value;
-					} else if(data[j].Name=="gender") {
-						var gender = data[j].Value;
-					} else if(data[j].Name=="interests") {
-						var interests = data[j].Value;
 					}
 				}
 				profile.firstName = firstName;
@@ -106,8 +100,6 @@ var getProfile = function(req, res){
 				profile.network = network;
 				profile.email = email;
 				profile.id = id;
-				profile.gender = gender;
-				profile.interests = interests;
 				
 				res.render("profile.ejs", {profile : profile});
 		}
@@ -234,6 +226,7 @@ function loadPostsWithUserIds(friend_ids, callback) {
             if (err) return callback(err);
             callback(null, posts);
         });
+	res.send("stuff");
 };
 
 //fetches wall posts for a profile page
@@ -244,9 +237,8 @@ var loadWall = function(req, res) {
 	db.loadWall(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
-		} else if(data.Items != undefined) {
+		} else if(data != undefined) {
 			posts = [];
-			if(data.Items != undefined){
 			for(i=0; i<data.Items.length; i++){
 				nextPost = new Object();
 				var name = data.Items[i].Name;
@@ -277,7 +269,6 @@ var loadWall = function(req, res) {
 			console.log(JSON.stringify(posts));
 			res.send(JSON.stringify(posts));			
 		}
-	}
 	});
 };
 
@@ -330,10 +321,12 @@ var checkFriend = function(req, res) {
 //fetches comments
 var loadComment = function(req, res) {
 	var id = req.params.id;
+	console.log("we reached routes");
 	db.loadComment(id, function(err, data){
 		if(err){
 			res.send("error on restaurants");
 		} else if(data) {
+			console.log("routes gets data from db");
 			comments = [];
 			if(data.Items !== undefined) {
 				for(i=0; i<data.Items.length; i++){
@@ -357,33 +350,16 @@ var loadComment = function(req, res) {
 					nextComment.like_count = like_count;
 					nextComment.post_tag = post_tag;
 					nextComment.creator = creator;
-					comments.push(nextComment);
-					
-					}
+					comments.push(nextComment);	
+				}
 			}
 			res.send(JSON.stringify(comments));			
+		} else {
+			res.send(JSON.stringify("{something}"));
 		}
 	});
 }; 
 
-var searchSuggest = function(req, res) {
-	var term = req.params.term;
-	db.findUsers(term, function(err, data) {
-		if (err) {
-			res.send("error during add");
-		} else if (data.Items != undefined) {
-			var arr = new Array();
-			console.log(data.Items[0].Attributes.length);
-			for (var i = 0; i < data.Items.length; i++) {
-				console.log(data.Items[i].Attributes[0].Value);
-				arr[i] = data.Items[i].Name + ',' + data.Items[i].Attributes[0].Value + ',' + data.Items[i].Attributes[1].Value;
-			}
-			res.send('search.ejs', {error:null, elements:arr});
-		} else {
-			res.send('search.ejs', {error:null, elements:null});
-		}
-	})
-}
 
 
 //after logout button is pressed
@@ -391,10 +367,6 @@ var logout = function(req, res) {
 	req.session.logged = false;
 	res.redirect('/');
 };
-
-var search = function(req, res) {
-	res.render('search.ejs', {error:null});
-}
 
 
 var routes = { 
@@ -411,9 +383,7 @@ var routes = {
   load_comments:loadComment,
   add_friend: addFriend,
   check_friend: checkFriend,
-  delete_friend: deleteFriend,
-  search_help: searchSuggest,
-  get_search: search
+  delete_friend: deleteFriend
 };
 
 module.exports = routes;
